@@ -1,0 +1,2477 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#c17f3a">
+<meta name="description" content="MD Reader Pro - Trình đọc Markdown đẹp với tabs, edit mode, TTS, Mermaid, KaTeX">
+<title>MD Reader Pro</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Merriweather:wght@400;700&family=Source+Serif+Pro:wght@400;600&family=DM+Sans:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-dark" disabled>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface-2: #fbfaf7;
+    --border: #e8e4dc;
+    --border-subtle: #f0ede8;
+    --text-primary: #1a1814;
+    --text-secondary: #6b6560;
+    --text-muted: #a09890;
+    --accent: #c17f3a;
+    --accent-light: #f5e9d6;
+    --accent-hover: #a86a28;
+    --code-bg: #f4f2ee;
+    --code-border: #e5e0d8;
+    --quote-border: #c17f3a;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+    --danger: #d65a45;
+    --success: #5a8c4a;
+
+    /* User-customizable */
+    --reader-font: 'Lora', Georgia, serif;
+    --reader-size: 17px;
+    --reader-line: 1.85;
+    --reader-width: 960px;
+
+    --font-ui: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --toolbar-h: 56px;
+    --tabs-h: 38px;
+    --sidebar-w: 280px;
+  }
+
+  .dark {
+    --bg: #141210;
+    --surface: #1e1b18;
+    --surface-2: #1a1714;
+    --border: #2e2a26;
+    --border-subtle: #252119;
+    --text-primary: #ede8df;
+    --text-secondary: #9d9288;
+    --text-muted: #5e5650;
+    --accent: #d4924a;
+    --accent-light: #2a2018;
+    --accent-hover: #e8a85e;
+    --code-bg: #252119;
+    --code-border: #312d28;
+    --quote-border: #d4924a;
+    --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+    --danger: #e87d68;
+    --success: #7aaf68;
+  }
+
+  .sepia {
+    --bg: #f4ecd8;
+    --surface: #fbf6e9;
+    --surface-2: #f7f0dd;
+    --border: #d9cfb3;
+    --border-subtle: #e5dcc4;
+    --text-primary: #433422;
+    --text-secondary: #7a6b54;
+    --text-muted: #a59879;
+    --accent: #a85a2a;
+    --accent-light: #ecd8b8;
+    --code-bg: #ede2c4;
+    --code-border: #d9cfb3;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text-primary);
+    transition: background 0.3s, color 0.3s;
+    overflow: hidden;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     LAYOUT
+     ═══════════════════════════════════════════════════════════════ */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* ─── TOOLBAR ─── */
+  #toolbar {
+    height: var(--toolbar-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    gap: 6px;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .toolbar-brand {
+    display: flex; align-items: center; gap: 10px; margin-right: 8px;
+  }
+  .toolbar-brand .logo {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, var(--accent), #e8a85e);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(193,127,58,0.3);
+  }
+  .toolbar-brand span {
+    font-size: 14px; font-weight: 700; color: var(--text-primary);
+    letter-spacing: -0.3px;
+  }
+  .toolbar-brand .pro {
+    font-size: 9px; font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 2px 5px; border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+  .toolbar-divider { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+  .toolbar-spacer { flex: 1; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: 12.5px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover {
+    background: var(--accent-light); color: var(--accent);
+    border-color: var(--accent);
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--accent); color: white; border-color: var(--accent);
+    font-weight: 600;
+  }
+  .btn-primary:hover {
+    background: var(--accent-hover); color: white; border-color: var(--accent-hover);
+  }
+  .btn-icon { padding: 7px; border: 1px solid transparent; background: transparent; }
+  .btn-icon:hover { background: var(--accent-light); color: var(--accent); border-color: transparent; }
+  .btn-icon.active { background: var(--accent-light); color: var(--accent); }
+
+  .export-group {
+    display: flex; gap: 2px; background: var(--border-subtle);
+    border: 1px solid var(--border); border-radius: 8px; padding: 3px;
+  }
+  .export-group .btn {
+    border: none; background: transparent; padding: 4px 10px; font-size: 11.5px;
+  }
+  .export-group .btn:hover { background: var(--surface); border: none; }
+
+  /* ─── TABS BAR ─── */
+  #tabs-bar {
+    height: var(--tabs-h);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    display: none;
+    align-items: center;
+    padding: 0 8px;
+    gap: 2px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    scrollbar-width: thin;
+  }
+  #tabs-bar.visible { display: flex; }
+  #tabs-bar::-webkit-scrollbar { height: 3px; }
+  #tabs-bar::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 8px 6px 12px;
+    border-radius: 7px 7px 0 0;
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: transparent;
+    transition: all 0.12s;
+    max-width: 220px;
+    flex-shrink: 0;
+    margin-bottom: -1px;
+  }
+  .tab:hover { background: var(--surface); color: var(--text-primary); }
+  .tab.active {
+    background: var(--surface);
+    color: var(--accent);
+    border-color: var(--border);
+    border-bottom-color: var(--surface);
+    font-weight: 600;
+  }
+  .tab .name {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 160px;
+  }
+  .tab .modified-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0;
+  }
+  .tab .close {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.12s;
+    font-size: 14px; line-height: 1;
+  }
+  .tab .close:hover { background: var(--danger); color: white; }
+  .tab-new {
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: transparent; color: var(--text-muted);
+    cursor: pointer; transition: all 0.12s;
+    font-size: 14px;
+    border: 1px dashed var(--border);
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+  .tab-new:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); border-style: solid; }
+
+  /* ─── BODY ─── */
+  #body { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    flex-shrink: 0; overflow: hidden;
+    transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  #sidebar.collapsed { width: 0; border-right: none; }
+
+  .sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 8px 0;
+    gap: 4px;
+  }
+  .sidebar-tab {
+    flex: 1; padding: 8px;
+    background: transparent; border: none;
+    font-family: var(--font-ui); font-size: 11px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    transition: all 0.15s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .sidebar-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .sidebar-tab:hover:not(.active) { background: var(--border-subtle); color: var(--text-secondary); }
+
+  .sidebar-panel { display: none; flex: 1; overflow-y: auto; padding: 8px; }
+  .sidebar-panel.active { display: block; }
+  .sidebar-panel::-webkit-scrollbar { width: 4px; }
+  .sidebar-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .toc-item {
+    display: block; padding: 5px 10px; border-radius: 6px;
+    font-size: 13px; color: var(--text-secondary);
+    cursor: pointer; transition: all 0.12s;
+    border: none; background: none; width: 100%; text-align: left;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .toc-item:hover { background: var(--accent-light); color: var(--accent); }
+  .toc-item.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+  .toc-item.h1 { font-weight: 600; }
+  .toc-item.h2 { padding-left: 18px; }
+  .toc-item.h3 { padding-left: 28px; font-size: 12px; color: var(--text-muted); }
+
+  .recent-item {
+    display: flex; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.12s;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+  }
+  .recent-item:hover { background: var(--border-subtle); border-color: var(--border); }
+  .recent-item .icon {
+    width: 32px; height: 32px;
+    background: var(--accent-light);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .recent-item .info { flex: 1; min-width: 0; }
+  .recent-item .name {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .recent-item .meta {
+    font-size: 11px; color: var(--text-muted); margin-top: 2px;
+  }
+  .recent-item .del {
+    opacity: 0; padding: 2px 6px; font-size: 11px;
+    background: transparent; border: none; color: var(--danger);
+    cursor: pointer; border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .recent-item:hover .del { opacity: 1; }
+  .recent-item .del:hover { background: var(--danger); color: white; }
+
+  .empty-state {
+    padding: 20px 12px; text-align: center;
+    font-size: 12px; color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ─── CONTENT ─── */
+  #content {
+    flex: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    position: relative;
+  }
+  #content::-webkit-scrollbar { width: 6px; }
+  #content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  #content::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  /* ─── DROP ZONE ─── */
+  #drop-zone {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%; gap: 18px; padding: 40px;
+  }
+  .drop-illustration {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, var(--accent-light), var(--border-subtle));
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+    box-shadow: var(--shadow-lg);
+    animation: float 3s ease-in-out infinite;
+    border: 2px solid var(--border);
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .drop-title {
+    font-family: var(--reader-font);
+    font-size: 24px; font-weight: 600;
+    color: var(--text-primary); text-align: center;
+  }
+  .drop-sub {
+    font-size: 13px; color: var(--text-secondary);
+    text-align: center; max-width: 380px; line-height: 1.6;
+  }
+  .drop-area {
+    width: 100%; max-width: 420px;
+    border: 2px dashed var(--border);
+    border-radius: 14px; padding: 24px;
+    text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--surface);
+  }
+  .drop-area:hover, .drop-area.dragover {
+    border-color: var(--accent); background: var(--accent-light);
+  }
+  .drop-area p { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  .drop-quick {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+
+  /* ─── ARTICLE ─── */
+  #article {
+    max-width: var(--reader-width);
+    margin: 0 auto;
+    padding: 50px 56px 120px;
+    transition: max-width 0.25s ease;
+    animation: fadeInUp 0.4s ease;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (max-width: 1100px) {
+    #article { padding: 40px 28px 100px; }
+  }
+
+  .file-meta {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .file-meta .file-icon {
+    width: 36px; height: 36px;
+    background: var(--accent-light);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; border: 1px solid var(--border);
+  }
+  .file-meta .name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .file-meta .stats { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ─── MARKDOWN BODY ─── */
+  .md-body {
+    font-family: var(--reader-font);
+    font-size: var(--reader-size);
+    line-height: var(--reader-line);
+    color: var(--text-primary);
+  }
+  .md-body h1, .md-body h2, .md-body h3, .md-body h4, .md-body h5, .md-body h6 {
+    font-family: var(--reader-font);
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-top: 1.8em; margin-bottom: 0.6em;
+    font-weight: 700;
+    scroll-margin-top: 80px;
+  }
+  .md-body h1 {
+    font-size: 2.1em; margin-top: 0;
+    letter-spacing: -0.5px;
+    padding-bottom: 0.3em;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+  .md-body h2 { font-size: 1.55em; letter-spacing: -0.3px; }
+  .md-body h3 { font-size: 1.25em; }
+  .md-body h4 { font-size: 1.1em; }
+  .md-body p { margin-bottom: 1.2em; }
+  .md-body a {
+    color: var(--accent); text-decoration: underline;
+    text-underline-offset: 3px; text-decoration-thickness: 1px;
+    transition: color 0.15s;
+  }
+  .md-body a:hover { color: var(--accent-hover); }
+  .md-body strong { font-weight: 700; color: var(--text-primary); }
+  .md-body em { font-style: italic; }
+  .md-body code {
+    font-family: var(--font-mono); font-size: 0.85em;
+    background: var(--code-bg); border: 1px solid var(--code-border);
+    border-radius: 5px; padding: 2px 6px; color: var(--accent);
+  }
+  .md-body pre {
+    background: var(--code-bg); border: 1px solid var(--code-border);
+    border-radius: 10px; padding: 18px 20px;
+    overflow-x: auto; margin: 1.4em 0; position: relative;
+  }
+  .md-body pre code {
+    background: none; border: none; padding: 0; color: inherit;
+    font-size: 0.88em; line-height: 1.65;
+  }
+  .md-body blockquote {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-light);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 20px; margin: 1.4em 0;
+    color: var(--text-secondary); font-style: italic;
+  }
+  .md-body blockquote p { margin-bottom: 0; }
+  .md-body ul, .md-body ol { padding-left: 1.6em; margin-bottom: 1.2em; }
+  .md-body li { margin-bottom: 0.4em; line-height: 1.7; }
+  .md-body ul li::marker { color: var(--accent); }
+  .md-body ol li::marker { color: var(--accent); font-weight: 600; }
+  .md-body table {
+    width: 100%; border-collapse: collapse;
+    margin: 1.4em 0; font-size: 0.92em;
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  .md-body th {
+    background: var(--accent-light); color: var(--accent);
+    font-family: var(--font-ui); font-weight: 600;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 11px 16px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .md-body td { padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); }
+  .md-body tr:last-child td { border-bottom: none; }
+  .md-body tr:hover td { background: var(--border-subtle); }
+  .md-body hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+  .md-body img { max-width: 100%; border-radius: 10px; box-shadow: var(--shadow-lg); margin: 1em 0; }
+  .md-body input[type="checkbox"] { accent-color: var(--accent); margin-right: 6px; }
+
+  /* ─── COLLAPSIBLE BLOCKS ─── */
+  .collapsible-wrap {
+    position: relative; margin: 1.4em 0;
+    border: 1px solid var(--code-border);
+    border-radius: 12px; overflow: hidden;
+    background: var(--code-bg);
+  }
+  .collapsible-wrap.is-collapsed .collapsible-content {
+    max-height: 280px; overflow: hidden; position: relative;
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  }
+  .collapsible-wrap.is-expanded .collapsible-content { max-height: none; }
+  .collapsible-wrap .collapsible-content > pre {
+    margin: 0; border: none; border-radius: 0; background: transparent;
+  }
+  .collapsible-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--code-border);
+    font-family: var(--font-ui); font-size: 11.5px;
+    color: var(--text-secondary); font-weight: 500;
+  }
+  .collapsible-header .left { display: flex; align-items: center; gap: 8px; }
+  .lang-tag {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--accent); text-transform: uppercase;
+    font-weight: 700; letter-spacing: 0.5px;
+  }
+  .meta-tag { color: var(--text-muted); font-size: 10.5px; }
+  .collapsible-header button {
+    background: transparent; border: 1px solid transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-ui); font-size: 10.5px; font-weight: 500;
+    padding: 4px 10px; border-radius: 6px;
+    cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .collapsible-header button:hover {
+    background: var(--accent-light); color: var(--accent);
+  }
+  .collapsible-toggle {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 9px;
+    background: linear-gradient(to top, var(--surface) 0%, transparent 100%);
+    border: none; border-top: 1px solid var(--code-border);
+    color: var(--accent);
+    font-family: var(--font-ui); font-size: 11.5px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s; gap: 6px;
+  }
+  .collapsible-toggle:hover { background: var(--accent-light); }
+  .collapsible-toggle svg { transition: transform 0.2s; }
+  .collapsible-wrap.is-expanded .collapsible-toggle svg { transform: rotate(180deg); }
+  .collapsible-wrap.is-quote {
+    background: var(--accent-light); border-left: 3px solid var(--accent);
+  }
+  .collapsible-wrap.is-quote .collapsible-content {
+    padding: 14px 20px; font-style: italic;
+    color: var(--text-secondary); font-family: var(--reader-font);
+  }
+
+  /* ─── MERMAID ─── */
+  .mermaid-wrap {
+    margin: 1.4em 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .mermaid-wrap svg { max-width: 100%; height: auto; }
+  .mermaid-error {
+    background: rgba(214,90,69,0.1); color: var(--danger);
+    border: 1px solid var(--danger); border-radius: 8px;
+    padding: 12px; font-family: var(--font-mono); font-size: 12px;
+    margin: 1em 0;
+  }
+
+  /* ─── KaTeX ─── */
+  .katex-display {
+    margin: 1.2em 0 !important;
+    padding: 14px;
+    background: var(--accent-light);
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  .katex { font-size: 1.05em; }
+
+  /* ─── PROGRESS BAR ─── */
+  #progress-bar {
+    position: fixed; left: 0; top: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), #e8a85e);
+    width: 0%; transition: width 0.1s; z-index: 200; pointer-events: none;
+  }
+
+  /* ─── SEARCH BAR ─── */
+  #search-bar {
+    display: none; position: absolute;
+    top: 0; right: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 9px 12px; box-shadow: var(--shadow-lg);
+    z-index: 90; gap: 6px; align-items: center;
+  }
+  #search-bar.visible { display: flex; }
+  #search-input {
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text-primary); font-family: var(--font-ui);
+    font-size: 12.5px; padding: 5px 10px;
+    border-radius: 6px; width: 240px; outline: none;
+  }
+  #search-input:focus { border-color: var(--accent); }
+  #search-count { font-size: 11px; color: var(--text-muted); }
+  mark.search-hl {
+    background: rgba(193,127,58,0.3); color: inherit;
+    border-radius: 2px; padding: 0 1px;
+  }
+  mark.search-hl.current { background: var(--accent); color: white; }
+
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text-primary); color: var(--bg);
+    font-family: var(--font-ui); font-size: 13px; font-weight: 500;
+    padding: 10px 18px; border-radius: 100px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 9999; white-space: nowrap;
+    box-shadow: var(--shadow-lg);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     EDIT MODE
+     ═══════════════════════════════════════════════════════════════ */
+  #editor-wrap {
+    display: none; height: 100%;
+    flex-direction: row;
+    background: var(--bg);
+  }
+  #editor-wrap.visible { display: flex; }
+  .edit-pane {
+    flex: 1; height: 100%;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+  .edit-pane:last-child { border-right: none; }
+  .pane-head {
+    height: 36px; padding: 0 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-ui); font-size: 11px;
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .pane-head .indicator {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+  #editor-textarea {
+    flex: 1;
+    border: none; outline: none;
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.7;
+    padding: 24px 32px;
+    resize: none;
+    width: 100%;
+    overflow: auto;
+  }
+  #editor-textarea::-webkit-scrollbar { width: 6px; }
+  #editor-textarea::-webkit-scrollbar-thumb { background: var(--border); }
+  #preview-pane { overflow-y: auto; }
+  #preview-pane::-webkit-scrollbar { width: 6px; }
+  #preview-pane::-webkit-scrollbar-thumb { background: var(--border); }
+  #preview-pane .preview-article {
+    max-width: var(--reader-width);
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+  #preview-pane .preview-article .md-body {
+    font-family: var(--reader-font);
+    font-size: var(--reader-size);
+    line-height: var(--reader-line);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     SETTINGS PANEL
+     ═══════════════════════════════════════════════════════════════ */
+  #settings-panel {
+    position: fixed; top: 0; right: 0;
+    width: 340px; height: 100%;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.06);
+    z-index: 500;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; flex-direction: column;
+  }
+  #settings-panel.visible { transform: translateX(0); }
+  .settings-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .settings-head h2 {
+    font-family: var(--reader-font);
+    font-size: 18px; font-weight: 700;
+    color: var(--text-primary);
+  }
+  .settings-body {
+    flex: 1; overflow-y: auto; padding: 16px 20px 32px;
+  }
+  .settings-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .settings-section:last-child { border-bottom: none; }
+  .settings-section h3 {
+    font-family: var(--font-ui);
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; gap: 10px;
+  }
+  .setting-row label {
+    font-family: var(--font-ui); font-size: 13px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  .setting-row .val {
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: var(--accent); font-weight: 600;
+    min-width: 32px; text-align: right;
+  }
+  .font-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .font-card {
+    padding: 12px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    cursor: pointer; transition: all 0.15s;
+    text-align: center;
+  }
+  .font-card:hover { border-color: var(--accent); }
+  .font-card.active {
+    border-color: var(--accent); background: var(--accent-light);
+  }
+  .font-card .preview {
+    font-size: 18px; font-weight: 600; color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .font-card .name {
+    font-family: var(--font-ui); font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  input[type="range"] {
+    flex: 1; appearance: none; -webkit-appearance: none;
+    height: 4px; background: var(--border); border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; background: var(--accent);
+    border-radius: 50%; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(193,127,58,0.4);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px; background: var(--accent);
+    border-radius: 50%; cursor: pointer; border: none;
+  }
+  .theme-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+  }
+  .theme-card {
+    padding: 12px 8px; border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.15s;
+    text-align: center;
+    font-family: var(--font-ui); font-size: 11px;
+    font-weight: 600;
+  }
+  .theme-card.active { border-color: var(--accent); }
+  .theme-light { background: #fbfaf7; color: #1a1814; }
+  .theme-dark { background: #1e1b18; color: #ede8df; }
+  .theme-sepia { background: #fbf6e9; color: #433422; }
+
+  #settings-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 499;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  #settings-overlay.visible { opacity: 1; pointer-events: auto; }
+
+  /* ═══════════════════════════════════════════════════════════════
+     TTS BAR
+     ═══════════════════════════════════════════════════════════════ */
+  #tts-bar {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 8px 14px;
+    box-shadow: var(--shadow-lg);
+    display: flex; align-items: center; gap: 10px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 400;
+    font-family: var(--font-ui);
+  }
+  #tts-bar.visible { transform: translateX(-50%) translateY(0); }
+  #tts-bar .tts-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white; border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  #tts-bar .tts-btn:hover { background: var(--accent-hover); transform: scale(1.05); }
+  #tts-bar .tts-btn.secondary {
+    background: transparent; color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  #tts-bar .tts-btn.secondary:hover {
+    background: var(--accent-light); color: var(--accent); border-color: var(--accent);
+  }
+  #tts-bar .tts-status {
+    font-size: 12px; font-weight: 500;
+    color: var(--text-secondary);
+    min-width: 80px;
+  }
+  #tts-bar select {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11.5px;
+    font-family: var(--font-ui);
+    color: var(--text-secondary);
+    cursor: pointer; outline: none;
+    max-width: 140px;
+  }
+  #tts-bar .tts-rate {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--text-muted);
+  }
+  #tts-bar .tts-rate input { width: 60px; }
+
+  .tts-current {
+    background: rgba(193,127,58,0.18) !important;
+    border-radius: 3px;
+    padding: 1px 2px;
+    transition: background 0.2s;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     SHORTCUT HINT
+     ═══════════════════════════════════════════════════════════════ */
+  kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--border-subtle);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--text-secondary);
+  }
+
+  /* ─── PRINT ─── */
+  @media print {
+    #toolbar, #sidebar, #tabs-bar, #progress-bar, #toast,
+    #search-bar, #settings-panel, #settings-overlay, #tts-bar {
+      display: none !important;
+    }
+    #body { display: block; overflow: visible; }
+    #content { overflow: visible; }
+    #article { max-width: 100%; padding: 0; }
+    body { background: white; }
+    .file-meta { display: none; }
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ═══════════════ TOOLBAR ═══════════════ -->
+  <div id="toolbar">
+    <div class="toolbar-brand">
+      <div class="logo">📖</div>
+      <span>MD Reader</span>
+      <span class="pro">PRO</span>
+    </div>
+    <div class="toolbar-divider"></div>
+
+    <button class="btn" onclick="document.getElementById('file-input').click()" title="Mở file">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Mở
+    </button>
+    <input type="file" id="file-input" accept=".md,.markdown,.txt" style="display:none" multiple>
+
+    <button class="btn btn-icon" id="new-tab-btn" title="Tab mới (Ctrl+N)" onclick="newEmptyTab()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+
+    <button class="btn btn-icon" id="sidebar-toggle" title="Sidebar" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="16" y2="12"/><line x1="3" y1="18" x2="11" y2="18"/></svg>
+    </button>
+
+    <button class="btn btn-icon" id="search-toggle" title="Tìm kiếm (Ctrl+F)" onclick="toggleSearch()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+
+    <button class="btn btn-icon" id="edit-toggle" title="Chế độ chỉnh sửa (Ctrl+E)" onclick="toggleEditMode()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </button>
+
+    <button class="btn btn-icon" id="tts-toggle" title="Đọc to (Text-to-Speech)" onclick="toggleTTS()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+    </button>
+
+    <div class="toolbar-spacer"></div>
+
+    <span id="word-count-badge" style="display:none; font-size: 11.5px; color: var(--text-muted); padding: 4px 10px; background: var(--border-subtle); border: 1px solid var(--border); border-radius: 20px;">—</span>
+
+    <button class="btn btn-icon" id="settings-btn" title="Cài đặt giao diện" onclick="toggleSettings()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+
+    <div class="toolbar-divider"></div>
+
+    <div class="export-group" id="export-group" style="display:none">
+      <button class="btn" onclick="exportTxt()">TXT</button>
+      <button class="btn" onclick="exportDocx()">DOCX</button>
+      <button class="btn" onclick="exportPdf()">PDF</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TABS BAR ═══════════════ -->
+  <div id="tabs-bar"></div>
+
+  <!-- ═══════════════ SEARCH BAR ═══════════════ -->
+  <div id="search-bar">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-input" placeholder="Tìm kiếm..." oninput="performSearch(this.value)" onkeydown="handleSearchKey(event)">
+    <span id="search-count"></span>
+    <button class="btn btn-icon" onclick="navigateSearch(-1)">↑</button>
+    <button class="btn btn-icon" onclick="navigateSearch(1)">↓</button>
+    <button class="btn btn-icon" onclick="toggleSearch()">✕</button>
+  </div>
+
+  <!-- ═══════════════ BODY ═══════════════ -->
+  <div id="body">
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" data-panel="toc" onclick="switchSidebar('toc')">📑 Mục lục</button>
+        <button class="sidebar-tab" data-panel="recent" onclick="switchSidebar('recent')">⏱️ Gần đây</button>
+      </div>
+      <div class="sidebar-panel active" id="panel-toc">
+        <div class="empty-state">Mở file để xem mục lục</div>
+      </div>
+      <div class="sidebar-panel" id="panel-recent">
+        <div class="empty-state">Chưa có file nào. File bạn mở sẽ xuất hiện ở đây.</div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+      <!-- Drop zone -->
+      <div id="drop-zone">
+        <div class="drop-illustration">📄</div>
+        <div class="drop-title">MD Reader Pro</div>
+        <div class="drop-sub">Đọc, chỉnh sửa và xuất Markdown với đầy đủ tính năng. Hỗ trợ Mermaid, KaTeX, TTS tiếng Việt.</div>
+        <div class="drop-area" id="drop-area" onclick="document.getElementById('file-input').click()">
+          <div style="font-size:26px;margin-bottom:6px;">⬆️</div>
+          <strong style="font-size:13px;color:var(--text-secondary)">Kéo thả file vào đây</strong>
+          <p>hoặc nhấp để chọn nhiều file .md</p>
+        </div>
+        <div class="drop-quick">
+          <button class="btn" onclick="loadSampleContent()">✨ Xem mẫu đầy đủ</button>
+          <button class="btn btn-primary" onclick="newEmptyTab()">📝 Tạo file mới</button>
+        </div>
+      </div>
+
+      <!-- Read mode article -->
+      <div id="article" style="display:none">
+        <div class="file-meta" id="file-meta">
+          <div class="file-icon">📝</div>
+          <div class="file-info">
+            <div class="name" id="file-name-display">document.md</div>
+            <div class="stats" id="file-stats">—</div>
+          </div>
+        </div>
+        <div class="md-body" id="md-body"></div>
+      </div>
+
+      <!-- Edit mode -->
+      <div id="editor-wrap">
+        <div class="edit-pane">
+          <div class="pane-head">
+            <span class="indicator"></span>
+            <span>Editor</span>
+            <span style="margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0">
+              <kbd>Ctrl+S</kbd> để lưu
+            </span>
+          </div>
+          <textarea id="editor-textarea" spellcheck="false" placeholder="# Bắt đầu viết Markdown ở đây..."></textarea>
+        </div>
+        <div class="edit-pane" id="preview-pane">
+          <div class="pane-head">
+            <span class="indicator" style="background: var(--success)"></span>
+            <span>Preview trực tiếp</span>
+          </div>
+          <div class="preview-article">
+            <div class="md-body" id="preview-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Progress bar -->
+<div id="progress-bar"></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ═══════════════ SETTINGS PANEL ═══════════════ -->
+<div id="settings-overlay" onclick="toggleSettings()"></div>
+<div id="settings-panel">
+  <div class="settings-head">
+    <h2>⚙️ Cài đặt giao diện</h2>
+    <button class="btn btn-icon" onclick="toggleSettings()">✕</button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-section">
+      <h3>🎨 Chủ đề</h3>
+      <div class="theme-grid">
+        <div class="theme-card theme-light" data-theme="light" onclick="setTheme('light')">Sáng</div>
+        <div class="theme-card theme-sepia" data-theme="sepia" onclick="setTheme('sepia')">Sepia</div>
+        <div class="theme-card theme-dark" data-theme="dark" onclick="setTheme('dark')">Tối</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>✍️ Font chữ</h3>
+      <div class="font-grid">
+        <div class="font-card" data-font="lora" onclick="setFont('lora')">
+          <div class="preview" style="font-family:'Lora',serif">Aa</div>
+          <div class="name">Lora</div>
+        </div>
+        <div class="font-card" data-font="merriweather" onclick="setFont('merriweather')">
+          <div class="preview" style="font-family:'Merriweather',serif">Aa</div>
+          <div class="name">Merriweather</div>
+        </div>
+        <div class="font-card" data-font="source" onclick="setFont('source')">
+          <div class="preview" style="font-family:'Source Serif Pro',serif">Aa</div>
+          <div class="name">Source Serif</div>
+        </div>
+        <div class="font-card" data-font="inter" onclick="setFont('inter')">
+          <div class="preview" style="font-family:'Inter',sans-serif">Aa</div>
+          <div class="name">Inter</div>
+        </div>
+        <div class="font-card" data-font="dmsans" onclick="setFont('dmsans')">
+          <div class="preview" style="font-family:'DM Sans',sans-serif">Aa</div>
+          <div class="name">DM Sans</div>
+        </div>
+        <div class="font-card" data-font="mono" onclick="setFont('mono')">
+          <div class="preview" style="font-family:'JetBrains Mono',monospace">Aa</div>
+          <div class="name">Mono</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>📏 Kích cỡ chữ</h3>
+      <div class="setting-row">
+        <label>Cỡ chữ</label>
+        <input type="range" id="font-size-slider" min="14" max="22" step="1" value="17" oninput="setFontSize(this.value)">
+        <span class="val" id="font-size-val">17px</span>
+      </div>
+      <div class="setting-row">
+        <label>Khoảng cách dòng</label>
+        <input type="range" id="line-height-slider" min="14" max="22" step="1" value="18" oninput="setLineHeight(this.value)">
+        <span class="val" id="line-height-val">1.85</span>
+      </div>
+      <div class="setting-row">
+        <label>Độ rộng cột</label>
+        <input type="range" id="width-slider" min="640" max="1200" step="40" value="960" oninput="setWidth(this.value)">
+        <span class="val" id="width-val">960</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>🔄 Đặt lại</h3>
+      <button class="btn" onclick="resetSettings()" style="width:100%;justify-content:center">↻ Khôi phục mặc định</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>⌨️ Phím tắt</h3>
+      <div style="font-size: 12px; color: var(--text-secondary); line-height: 2;">
+        <div><kbd>Ctrl+O</kbd> Mở file</div>
+        <div><kbd>Ctrl+N</kbd> Tab mới</div>
+        <div><kbd>Ctrl+W</kbd> Đóng tab</div>
+        <div><kbd>Ctrl+E</kbd> Chỉnh sửa</div>
+        <div><kbd>Ctrl+S</kbd> Lưu file</div>
+        <div><kbd>Ctrl+F</kbd> Tìm kiếm</div>
+        <div><kbd>Ctrl+Tab</kbd> Tab tiếp theo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TTS BAR ═══════════════ -->
+<div id="tts-bar">
+  <button class="tts-btn" id="tts-play" onclick="ttsToggle()" title="Phát/Tạm dừng">
+    <svg id="tts-icon-play" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <svg id="tts-icon-pause" width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+  </button>
+  <button class="tts-btn secondary" onclick="ttsStop()" title="Dừng">
+    <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg>
+  </button>
+  <span class="tts-status" id="tts-status">Sẵn sàng</span>
+  <select id="tts-voice" title="Chọn giọng đọc"></select>
+  <div class="tts-rate">
+    <span>Tốc độ</span>
+    <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="1" oninput="ttsRateChange(this.value)">
+    <span class="val" id="tts-rate-val" style="color:var(--accent);font-weight:600;font-family:var(--font-mono);font-size:10px;min-width:24px">1.0x</span>
+  </div>
+  <button class="tts-btn secondary" onclick="toggleTTS()" title="Đóng">✕</button>
+</div>
+
+<!-- Mermaid theme refresh helper -->
+<div id="mermaid-theme-anchor" style="display:none"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+//                   STATE & CONSTANTS
+// ════════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY_RECENT = 'mdreader_recent_v1';
+const STORAGE_KEY_SETTINGS = 'mdreader_settings_v1';
+const MAX_RECENT = 12;
+
+const state = {
+  tabs: [],            // [{ id, name, content, scroll, edited, isNew }]
+  activeTabId: null,
+  editMode: false,
+  searchMatches: [],
+  searchIndex: 0,
+  sidebarOpen: true,
+  settings: {
+    theme: 'light',     // light | dark | sepia
+    font: 'lora',
+    fontSize: 17,
+    lineHeight: 1.85,
+    width: 960
+  },
+  tts: {
+    enabled: false,
+    speaking: false,
+    paused: false,
+    rate: 1,
+    voice: null,
+    sentences: [],
+    currentIdx: 0,
+    utterance: null
+  }
+};
+
+const FONT_MAP = {
+  lora: "'Lora', Georgia, serif",
+  merriweather: "'Merriweather', Georgia, serif",
+  source: "'Source Serif Pro', Georgia, serif",
+  inter: "'Inter', sans-serif",
+  dmsans: "'DM Sans', sans-serif",
+  mono: "'JetBrains Mono', monospace"
+};
+
+// ════════════════════════════════════════════════════════════════════
+//                   MARKED CONFIG
+// ════════════════════════════════════════════════════════════════════
+
+const renderer = new marked.Renderer();
+renderer.heading = function(text, level) {
+  const id = 'h-' + text.replace(/<[^>]*>/g, '').toLowerCase()
+    .replace(/[^\w\s\u00C0-\u1EF9-]/g, '').replace(/\s+/g, '-').slice(0, 60);
+  return `<h${level} id="${id}">${text}</h${level}>`;
+};
+renderer.code = function(code, language) {
+  const lang = (language || '').trim();
+  if (lang === 'mermaid') {
+    // Defer rendering to post-process
+    return `<div class="mermaid-pending" data-mermaid-code="${encodeURIComponent(code)}"></div>`;
+  }
+  const highlighted = lang && hljs.getLanguage(lang)
+    ? hljs.highlight(code, { language: lang }).value
+    : hljs.highlightAuto(code).value;
+  return `<pre class="hljs"><span class="code-lang-label" data-lang="${lang || 'code'}"></span><code>${highlighted}</code></pre>`;
+};
+marked.use({ renderer, breaks: true, gfm: true });
+
+// Init Mermaid
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+  securityLevel: 'loose',
+  fontFamily: 'DM Sans, sans-serif'
+});
+
+// ════════════════════════════════════════════════════════════════════
+//                   SETTINGS
+// ════════════════════════════════════════════════════════════════════
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      Object.assign(state.settings, parsed);
+    }
+  } catch(e) {}
+  applySettings();
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(state.settings));
+  } catch(e) {}
+}
+
+function applySettings() {
+  const s = state.settings;
+  // Theme
+  document.documentElement.classList.remove('dark', 'sepia');
+  if (s.theme === 'dark') document.documentElement.classList.add('dark');
+  if (s.theme === 'sepia') document.documentElement.classList.add('sepia');
+  document.getElementById('hljs-light').disabled = (s.theme === 'dark');
+  document.getElementById('hljs-dark').disabled = (s.theme !== 'dark');
+  document.querySelectorAll('.theme-card').forEach(el =>
+    el.classList.toggle('active', el.dataset.theme === s.theme));
+
+  // Font
+  document.documentElement.style.setProperty('--reader-font', FONT_MAP[s.font]);
+  document.querySelectorAll('.font-card').forEach(el =>
+    el.classList.toggle('active', el.dataset.font === s.font));
+
+  // Sizes
+  document.documentElement.style.setProperty('--reader-size', s.fontSize + 'px');
+  document.documentElement.style.setProperty('--reader-line', s.lineHeight);
+  document.documentElement.style.setProperty('--reader-width', s.width + 'px');
+
+  document.getElementById('font-size-slider').value = s.fontSize;
+  document.getElementById('font-size-val').textContent = s.fontSize + 'px';
+  document.getElementById('line-height-slider').value = Math.round(s.lineHeight * 10);
+  document.getElementById('line-height-val').textContent = s.lineHeight.toFixed(2);
+  document.getElementById('width-slider').value = s.width;
+  document.getElementById('width-val').textContent = s.width;
+
+  // Update mermaid theme
+  if (window.mermaid) {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: s.theme === 'dark' ? 'dark' : 'default',
+      securityLevel: 'loose',
+      fontFamily: 'DM Sans, sans-serif'
+    });
+  }
+}
+
+function setTheme(t) {
+  state.settings.theme = t;
+  applySettings();
+  saveSettings();
+  // Re-render mermaid blocks
+  if (state.activeTabId) renderActiveTab();
+}
+
+function setFont(f) {
+  state.settings.font = f;
+  applySettings();
+  saveSettings();
+}
+
+function setFontSize(v) {
+  state.settings.fontSize = parseInt(v);
+  applySettings();
+  saveSettings();
+}
+
+function setLineHeight(v) {
+  state.settings.lineHeight = parseInt(v) / 10;
+  applySettings();
+  saveSettings();
+}
+
+function setWidth(v) {
+  state.settings.width = parseInt(v);
+  applySettings();
+  saveSettings();
+}
+
+function resetSettings() {
+  state.settings = { theme: 'light', font: 'lora', fontSize: 17, lineHeight: 1.85, width: 960 };
+  applySettings();
+  saveSettings();
+  showToast('↻ Đã khôi phục mặc định');
+}
+
+function toggleSettings() {
+  document.getElementById('settings-panel').classList.toggle('visible');
+  document.getElementById('settings-overlay').classList.toggle('visible');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   TABS
+// ════════════════════════════════════════════════════════════════════
+
+function genId() { return 'tab_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+
+function newEmptyTab() {
+  const tab = {
+    id: genId(),
+    name: 'Untitled.md',
+    content: '',
+    scroll: 0,
+    edited: false,
+    isNew: true
+  };
+  state.tabs.push(tab);
+  switchTab(tab.id);
+  renderTabsBar();
+  // Auto-enter edit mode
+  if (!state.editMode) toggleEditMode();
+}
+
+function openFileAsTab(name, content) {
+  // If a tab with same name + same content exists, switch to it
+  const existing = state.tabs.find(t => t.name === name);
+  if (existing) {
+    existing.content = content;
+    switchTab(existing.id);
+  } else {
+    const tab = {
+      id: genId(),
+      name,
+      content,
+      scroll: 0,
+      edited: false,
+      isNew: false
+    };
+    state.tabs.push(tab);
+    switchTab(tab.id);
+  }
+  renderTabsBar();
+  addRecent(name, content);
+}
+
+function switchTab(id) {
+  // Save current scroll before switching
+  if (state.activeTabId && !state.editMode) {
+    const cur = getTab(state.activeTabId);
+    if (cur) cur.scroll = document.getElementById('content').scrollTop;
+  }
+  state.activeTabId = id;
+  renderActiveTab();
+  renderTabsBar();
+}
+
+function closeTab(id, ev) {
+  if (ev) ev.stopPropagation();
+  const tab = getTab(id);
+  if (!tab) return;
+  if (tab.edited) {
+    if (!confirm(`Tab "${tab.name}" có thay đổi chưa lưu. Bạn có chắc muốn đóng?`)) return;
+  }
+  const idx = state.tabs.findIndex(t => t.id === id);
+  state.tabs.splice(idx, 1);
+  if (state.activeTabId === id) {
+    if (state.tabs.length) {
+      switchTab(state.tabs[Math.min(idx, state.tabs.length - 1)].id);
+    } else {
+      state.activeTabId = null;
+      showDropZone();
+    }
+  }
+  renderTabsBar();
+}
+
+function getTab(id) { return state.tabs.find(t => t.id === id); }
+function getActiveTab() { return getTab(state.activeTabId); }
+
+function renderTabsBar() {
+  const bar = document.getElementById('tabs-bar');
+  bar.innerHTML = '';
+  if (!state.tabs.length) {
+    bar.classList.remove('visible');
+    return;
+  }
+  bar.classList.add('visible');
+  state.tabs.forEach(tab => {
+    const el = document.createElement('div');
+    el.className = 'tab' + (tab.id === state.activeTabId ? ' active' : '');
+    el.title = tab.name;
+    el.onclick = () => switchTab(tab.id);
+    el.innerHTML = `
+      ${tab.edited ? '<span class="modified-dot"></span>' : '<span style="font-size:11px;color:var(--accent)">📄</span>'}
+      <span class="name">${escapeHtml(tab.name)}</span>
+      <span class="close" onclick="closeTab('${tab.id}', event)">×</span>
+    `;
+    bar.appendChild(el);
+  });
+  const newBtn = document.createElement('div');
+  newBtn.className = 'tab-new';
+  newBtn.title = 'Tab mới (Ctrl+N)';
+  newBtn.innerHTML = '+';
+  newBtn.onclick = newEmptyTab;
+  bar.appendChild(newBtn);
+}
+
+function renderActiveTab() {
+  const tab = getActiveTab();
+  if (!tab) {
+    showDropZone();
+    return;
+  }
+  hideDropZone();
+
+  if (state.editMode) {
+    showEditMode();
+    document.getElementById('editor-textarea').value = tab.content;
+    renderPreview(tab.content);
+  } else {
+    showReadMode();
+    renderToBody('md-body', tab.content);
+    document.getElementById('file-name-display').textContent = tab.name;
+    updateStats(tab.content);
+    setTimeout(() => {
+      document.getElementById('content').scrollTop = tab.scroll || 0;
+    }, 50);
+  }
+  buildTOC();
+}
+
+function showDropZone() {
+  document.getElementById('drop-zone').style.display = 'flex';
+  document.getElementById('article').style.display = 'none';
+  document.getElementById('editor-wrap').classList.remove('visible');
+  document.getElementById('export-group').style.display = 'none';
+  document.getElementById('word-count-badge').style.display = 'none';
+  document.getElementById('tabs-bar').classList.remove('visible');
+}
+function showReadMode() {
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('article').style.display = 'block';
+  document.getElementById('editor-wrap').classList.remove('visible');
+  document.getElementById('export-group').style.display = 'flex';
+  document.getElementById('word-count-badge').style.display = 'inline-block';
+}
+function showEditMode() {
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('article').style.display = 'none';
+  document.getElementById('editor-wrap').classList.add('visible');
+  document.getElementById('export-group').style.display = 'flex';
+  document.getElementById('word-count-badge').style.display = 'inline-block';
+}
+function hideDropZone() {
+  document.getElementById('drop-zone').style.display = 'none';
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   RECENT FILES
+// ════════════════════════════════════════════════════════════════════
+
+function loadRecent() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY_RECENT)) || [];
+  } catch(e) { return []; }
+}
+
+function saveRecent(arr) {
+  try { localStorage.setItem(STORAGE_KEY_RECENT, JSON.stringify(arr)); } catch(e) {}
+}
+
+function addRecent(name, content) {
+  let arr = loadRecent();
+  arr = arr.filter(r => r.name !== name);
+  arr.unshift({
+    name,
+    content,
+    size: content.length,
+    words: content.trim().split(/\s+/).filter(Boolean).length,
+    time: Date.now()
+  });
+  arr = arr.slice(0, MAX_RECENT);
+  saveRecent(arr);
+  renderRecent();
+}
+
+function removeRecent(name, ev) {
+  if (ev) ev.stopPropagation();
+  let arr = loadRecent().filter(r => r.name !== name);
+  saveRecent(arr);
+  renderRecent();
+}
+
+function renderRecent() {
+  const arr = loadRecent();
+  const panel = document.getElementById('panel-recent');
+  if (!arr.length) {
+    panel.innerHTML = '<div class="empty-state">Chưa có file nào.<br>File bạn mở sẽ xuất hiện ở đây.</div>';
+    return;
+  }
+  panel.innerHTML = '';
+  arr.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'recent-item';
+    el.onclick = () => openFileAsTab(item.name, item.content);
+    const ago = timeAgo(item.time);
+    el.innerHTML = `
+      <div class="icon">📄</div>
+      <div class="info">
+        <div class="name">${escapeHtml(item.name)}</div>
+        <div class="meta">${item.words.toLocaleString()} từ · ${ago}</div>
+      </div>
+      <button class="del" onclick="removeRecent('${escapeHtml(item.name).replace(/'/g, "\\'")}', event)">🗑</button>
+    `;
+    panel.appendChild(el);
+  });
+}
+
+function timeAgo(ts) {
+  const diff = (Date.now() - ts) / 1000;
+  if (diff < 60) return 'vừa xong';
+  if (diff < 3600) return Math.floor(diff/60) + ' phút trước';
+  if (diff < 86400) return Math.floor(diff/3600) + ' giờ trước';
+  if (diff < 604800) return Math.floor(diff/86400) + ' ngày trước';
+  return new Date(ts).toLocaleDateString('vi-VN');
+}
+
+function switchSidebar(panel) {
+  document.querySelectorAll('.sidebar-tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.panel === panel));
+  document.querySelectorAll('.sidebar-panel').forEach(p =>
+    p.classList.toggle('active', p.id === 'panel-' + panel));
+  if (panel === 'recent') renderRecent();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   FILE INPUT & DROP
+// ════════════════════════════════════════════════════════════════════
+
+document.getElementById('file-input').addEventListener('change', function(e) {
+  Array.from(e.target.files).forEach(f => loadFileToTab(f));
+  this.value = '';
+});
+
+const dropArea = document.getElementById('drop-area');
+const contentEl = document.getElementById('content');
+
+['dragenter','dragover'].forEach(ev =>
+  contentEl.addEventListener(ev, e => { e.preventDefault(); dropArea?.classList.add('dragover'); }));
+['dragleave','drop'].forEach(ev =>
+  contentEl.addEventListener(ev, e => dropArea?.classList.remove('dragover')));
+
+contentEl.addEventListener('drop', e => {
+  e.preventDefault();
+  Array.from(e.dataTransfer.files).forEach(f => {
+    if (/\.(md|markdown|txt)$/i.test(f.name)) loadFileToTab(f);
+  });
+});
+
+function loadFileToTab(file) {
+  const reader = new FileReader();
+  reader.onload = e => openFileAsTab(file.name, e.target.result);
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   RENDER (with Mermaid + KaTeX + collapsibles)
+// ════════════════════════════════════════════════════════════════════
+
+function renderToBody(elementId, md) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.innerHTML = marked.parse(md);
+  // Post-process
+  enhanceCodeBlocks(el);
+  renderMermaidIn(el);
+  renderKatexIn(el);
+  enhanceLongBlocks(el);
+}
+
+function renderPreview(md) {
+  renderToBody('preview-body', md);
+}
+
+async function renderMermaidIn(root) {
+  const pendings = root.querySelectorAll('.mermaid-pending');
+  for (let i = 0; i < pendings.length; i++) {
+    const node = pendings[i];
+    const code = decodeURIComponent(node.dataset.mermaidCode || '');
+    const id = 'mer_' + Date.now() + '_' + i;
+    try {
+      const { svg } = await mermaid.render(id, code);
+      const wrap = document.createElement('div');
+      wrap.className = 'mermaid-wrap';
+      wrap.innerHTML = svg;
+      node.replaceWith(wrap);
+    } catch (err) {
+      const errEl = document.createElement('div');
+      errEl.className = 'mermaid-error';
+      errEl.textContent = '⚠️ Lỗi Mermaid: ' + (err.message || err);
+      node.replaceWith(errEl);
+    }
+  }
+}
+
+function renderKatexIn(root) {
+  if (!window.renderMathInElement) return;
+  try {
+    renderMathInElement(root, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '\\(', right: '\\)', display: false }
+      ],
+      throwOnError: false
+    });
+  } catch(e) { console.warn('KaTeX:', e); }
+}
+
+function enhanceCodeBlocks(root) {
+  // Set lang label data
+  root.querySelectorAll('.code-lang-label').forEach(el => {
+    el.textContent = '';  // we use header instead
+  });
+}
+
+const COLLAPSE_LINE_THRESHOLD = 14;
+
+function enhanceLongBlocks(root) {
+  root.querySelectorAll('pre').forEach(pre => {
+    if (pre.closest('.collapsible-wrap') || pre.closest('.mermaid-wrap')) return;
+    const code = pre.querySelector('code');
+    const lineCount = code ? code.textContent.split('\n').length : 0;
+    const langLabel = pre.querySelector('.code-lang-label');
+    const lang = langLabel ? (langLabel.dataset.lang || 'code') : 'code';
+    if (langLabel) langLabel.remove();
+
+    const isLong = lineCount > COLLAPSE_LINE_THRESHOLD;
+    const wrap = createWrap({ lang, meta: `${lineCount} dòng`, collapsible: isLong, type: 'code' });
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.querySelector('.collapsible-content').appendChild(pre);
+  });
+
+  root.querySelectorAll('blockquote').forEach(bq => {
+    if (bq.closest('.collapsible-wrap')) return;
+    const text = bq.textContent.trim();
+    if (text.length < 400) return;
+    const wc = text.split(/\s+/).length;
+    const wrap = createWrap({ lang: 'TRÍCH DẪN', meta: `${wc} từ`, collapsible: true, type: 'quote' });
+    bq.parentNode.insertBefore(wrap, bq);
+    wrap.querySelector('.collapsible-content').appendChild(bq);
+  });
+}
+
+function createWrap({ lang, meta, collapsible, type }) {
+  const wrap = document.createElement('div');
+  wrap.className = 'collapsible-wrap' + (type === 'quote' ? ' is-quote' : '');
+  wrap.classList.add(collapsible ? 'is-collapsed' : 'is-expanded');
+  wrap.innerHTML = `
+    <div class="collapsible-header">
+      <div class="left">
+        <span class="lang-tag">${lang}</span>
+        <span class="meta-tag">· ${meta}</span>
+      </div>
+      <div class="actions">
+        ${type === 'code' ? `<button class="copy-btn">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy</button>` : ''}
+      </div>
+    </div>
+    <div class="collapsible-content"></div>
+    ${collapsible ? `<button class="collapsible-toggle" type="button">
+      <span class="toggle-text">Mở rộng</span>
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>` : ''}
+  `;
+  const toggle = wrap.querySelector('.collapsible-toggle');
+  if (toggle) toggle.onclick = () => {
+    const exp = wrap.classList.toggle('is-expanded');
+    wrap.classList.toggle('is-collapsed', !exp);
+    toggle.querySelector('.toggle-text').textContent = exp ? 'Thu gọn' : 'Mở rộng';
+  };
+  const copyBtn = wrap.querySelector('.copy-btn');
+  if (copyBtn) copyBtn.onclick = () => {
+    const code = wrap.querySelector('code');
+    if (code) navigator.clipboard.writeText(code.textContent).then(() => {
+      copyBtn.innerHTML = '✓ Đã copy';
+      setTimeout(() => copyBtn.innerHTML = `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`, 1500);
+    });
+  };
+  return wrap;
+}
+
+function updateStats(md) {
+  const words = md.trim().split(/\s+/).filter(Boolean).length;
+  const chars = md.length;
+  const readMin = Math.max(1, Math.ceil(words / 200));
+  const fileStats = document.getElementById('file-stats');
+  if (fileStats) fileStats.textContent =
+    `${words.toLocaleString()} từ · ${chars.toLocaleString()} ký tự · ~${readMin} phút đọc`;
+  document.getElementById('word-count-badge').textContent =
+    `${words.toLocaleString()} từ · ~${readMin} phút`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   TABLE OF CONTENTS
+// ════════════════════════════════════════════════════════════════════
+
+function buildTOC() {
+  const root = state.editMode
+    ? document.getElementById('preview-body')
+    : document.getElementById('md-body');
+  if (!root) return;
+  const headings = root.querySelectorAll('h1, h2, h3');
+  const toc = document.getElementById('panel-toc');
+  toc.innerHTML = '';
+  if (!headings.length) {
+    toc.innerHTML = '<div class="empty-state">Không có tiêu đề trong tài liệu</div>';
+    return;
+  }
+  headings.forEach(h => {
+    const btn = document.createElement('button');
+    btn.className = `toc-item ${h.tagName.toLowerCase()}`;
+    btn.textContent = h.textContent;
+    btn.title = h.textContent;
+    btn.onclick = () => {
+      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelectorAll('.toc-item').forEach(i => i.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    toc.appendChild(btn);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   PROGRESS BAR
+// ════════════════════════════════════════════════════════════════════
+
+contentEl.addEventListener('scroll', () => {
+  const el = contentEl;
+  const max = el.scrollHeight - el.clientHeight;
+  const progress = max > 0 ? el.scrollTop / max * 100 : 0;
+  document.getElementById('progress-bar').style.width = Math.min(progress, 100) + '%';
+});
+
+// ════════════════════════════════════════════════════════════════════
+//                   SIDEBAR
+// ════════════════════════════════════════════════════════════════════
+
+function toggleSidebar() {
+  state.sidebarOpen = !state.sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('collapsed', !state.sidebarOpen);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   SEARCH
+// ════════════════════════════════════════════════════════════════════
+
+function toggleSearch() {
+  const bar = document.getElementById('search-bar');
+  bar.classList.toggle('visible');
+  if (bar.classList.contains('visible')) {
+    document.getElementById('search-input').focus();
+  } else {
+    clearSearch();
+  }
+}
+
+function performSearch(query) {
+  clearHighlights();
+  if (!query.trim()) {
+    document.getElementById('search-count').textContent = '';
+    state.searchMatches = []; return;
+  }
+  const root = state.editMode
+    ? document.getElementById('preview-body')
+    : document.getElementById('md-body');
+  if (!root) return;
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => n.parentElement.tagName === 'SCRIPT' ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+  });
+  const nodes = []; let n;
+  while (n = walker.nextNode()) nodes.push(n);
+
+  state.searchMatches = [];
+  const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  nodes.forEach(textNode => {
+    const text = textNode.textContent;
+    if (!re.test(text)) return;
+    re.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let lastIdx = 0, m;
+    while ((m = re.exec(text)) !== null) {
+      frag.appendChild(document.createTextNode(text.slice(lastIdx, m.index)));
+      const mark = document.createElement('mark');
+      mark.className = 'search-hl'; mark.textContent = m[0];
+      state.searchMatches.push(mark); frag.appendChild(mark);
+      lastIdx = m.index + m[0].length;
+    }
+    frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+    textNode.parentNode.replaceChild(frag, textNode);
+  });
+  state.searchIndex = 0;
+  highlightCurrent();
+  document.getElementById('search-count').textContent =
+    state.searchMatches.length ? `${state.searchIndex + 1}/${state.searchMatches.length}` : 'Không có';
+}
+
+function highlightCurrent() {
+  state.searchMatches.forEach((m, i) => m.classList.toggle('current', i === state.searchIndex));
+  const cur = state.searchMatches[state.searchIndex];
+  if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function navigateSearch(dir) {
+  if (!state.searchMatches.length) return;
+  state.searchIndex = (state.searchIndex + dir + state.searchMatches.length) % state.searchMatches.length;
+  highlightCurrent();
+  document.getElementById('search-count').textContent = `${state.searchIndex + 1}/${state.searchMatches.length}`;
+}
+
+function handleSearchKey(e) {
+  if (e.key === 'Enter') navigateSearch(e.shiftKey ? -1 : 1);
+}
+
+function clearHighlights() {
+  document.querySelectorAll('mark.search-hl').forEach(m =>
+    m.replaceWith(document.createTextNode(m.textContent)));
+  state.searchMatches = [];
+}
+function clearSearch() {
+  clearHighlights();
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-count').textContent = '';
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   EDIT MODE
+// ════════════════════════════════════════════════════════════════════
+
+let renderDebounce = null;
+function toggleEditMode() {
+  if (!state.activeTabId) {
+    showToast('⚠️ Mở hoặc tạo file trước');
+    return;
+  }
+  state.editMode = !state.editMode;
+  document.getElementById('edit-toggle').classList.toggle('active', state.editMode);
+  renderActiveTab();
+}
+
+document.getElementById('editor-textarea').addEventListener('input', e => {
+  const tab = getActiveTab();
+  if (!tab) return;
+  tab.content = e.target.value;
+  tab.edited = true;
+  renderTabsBar();
+  updateStats(tab.content);
+  clearTimeout(renderDebounce);
+  renderDebounce = setTimeout(() => renderPreview(tab.content), 250);
+});
+
+// Sync scroll between editor and preview (approximate)
+document.getElementById('editor-textarea').addEventListener('scroll', e => {
+  if (!state.editMode) return;
+  const ta = e.target;
+  const ratio = ta.scrollTop / (ta.scrollHeight - ta.clientHeight);
+  const pv = document.getElementById('preview-pane');
+  pv.scrollTop = ratio * (pv.scrollHeight - pv.clientHeight);
+});
+
+// ════════════════════════════════════════════════════════════════════
+//                   TTS (Text-to-Speech)
+// ════════════════════════════════════════════════════════════════════
+
+let ttsVoices = [];
+
+function initTTS() {
+  if (!('speechSynthesis' in window)) {
+    document.getElementById('tts-toggle').style.display = 'none';
+    return;
+  }
+  const populate = () => {
+    ttsVoices = speechSynthesis.getVoices();
+    const sel = document.getElementById('tts-voice');
+    sel.innerHTML = '';
+    // Vietnamese first
+    const vi = ttsVoices.filter(v => v.lang.startsWith('vi'));
+    const en = ttsVoices.filter(v => v.lang.startsWith('en'));
+    const others = ttsVoices.filter(v => !v.lang.startsWith('vi') && !v.lang.startsWith('en'));
+    [...vi, ...en, ...others].forEach((v, i) => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      sel.appendChild(opt);
+    });
+    if (vi.length) sel.value = vi[0].name;
+    sel.onchange = () => {
+      state.tts.voice = ttsVoices.find(v => v.name === sel.value);
+    };
+    state.tts.voice = vi[0] || ttsVoices[0];
+  };
+  populate();
+  speechSynthesis.onvoiceschanged = populate;
+}
+
+function toggleTTS() {
+  state.tts.enabled = !state.tts.enabled;
+  document.getElementById('tts-bar').classList.toggle('visible', state.tts.enabled);
+  document.getElementById('tts-toggle').classList.toggle('active', state.tts.enabled);
+  if (!state.tts.enabled) ttsStop();
+}
+
+function ttsToggle() {
+  if (state.tts.speaking && !state.tts.paused) {
+    speechSynthesis.pause();
+    state.tts.paused = true;
+    updateTTSStatus();
+  } else if (state.tts.paused) {
+    speechSynthesis.resume();
+    state.tts.paused = false;
+    updateTTSStatus();
+  } else {
+    ttsStart();
+  }
+  updateTTSIcon();
+}
+
+function ttsStart() {
+  const tab = getActiveTab();
+  if (!tab) { showToast('⚠️ Mở file trước'); return; }
+  speechSynthesis.cancel();
+  // Split text into sentences from rendered preview/article
+  const root = state.editMode
+    ? document.getElementById('preview-body')
+    : document.getElementById('md-body');
+  const text = (root?.innerText || tab.content).trim();
+  if (!text) { showToast('⚠️ Không có nội dung'); return; }
+
+  // Split into sentences
+  state.tts.sentences = splitIntoSentences(text);
+  state.tts.currentIdx = 0;
+  speakNext();
+}
+
+function splitIntoSentences(text) {
+  const parts = text.match(/[^.!?。！？\n]+[.!?。！？]?[\s\n]*/g) || [text];
+  return parts.map(s => s.trim()).filter(s => s.length > 0);
+}
+
+function speakNext() {
+  if (state.tts.currentIdx >= state.tts.sentences.length) {
+    state.tts.speaking = false;
+    state.tts.paused = false;
+    updateTTSStatus();
+    updateTTSIcon();
+    showToast('✅ Đã đọc xong');
+    return;
+  }
+  const sentence = state.tts.sentences[state.tts.currentIdx];
+  const u = new SpeechSynthesisUtterance(sentence);
+  u.rate = state.tts.rate;
+  if (state.tts.voice) {
+    u.voice = state.tts.voice;
+    u.lang = state.tts.voice.lang;
+  } else {
+    u.lang = 'vi-VN';
+  }
+  u.onend = () => {
+    state.tts.currentIdx++;
+    speakNext();
+  };
+  u.onerror = () => {
+    state.tts.currentIdx++;
+    speakNext();
+  };
+  state.tts.utterance = u;
+  state.tts.speaking = true;
+  state.tts.paused = false;
+  speechSynthesis.speak(u);
+  updateTTSStatus();
+  updateTTSIcon();
+}
+
+function ttsStop() {
+  speechSynthesis.cancel();
+  state.tts.speaking = false;
+  state.tts.paused = false;
+  state.tts.currentIdx = 0;
+  updateTTSStatus();
+  updateTTSIcon();
+}
+
+function ttsRateChange(v) {
+  state.tts.rate = parseFloat(v);
+  document.getElementById('tts-rate-val').textContent = state.tts.rate.toFixed(1) + 'x';
+  // Apply on next sentence
+  if (state.tts.speaking) {
+    speechSynthesis.cancel();
+    speakNext();
+  }
+}
+
+function updateTTSStatus() {
+  const status = document.getElementById('tts-status');
+  if (state.tts.paused) status.textContent = '⏸ Tạm dừng';
+  else if (state.tts.speaking) {
+    const total = state.tts.sentences.length;
+    status.textContent = `🔊 ${state.tts.currentIdx + 1}/${total}`;
+  } else status.textContent = 'Sẵn sàng';
+}
+
+function updateTTSIcon() {
+  const isPlaying = state.tts.speaking && !state.tts.paused;
+  document.getElementById('tts-icon-play').style.display = isPlaying ? 'none' : 'block';
+  document.getElementById('tts-icon-pause').style.display = isPlaying ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   EXPORT (TXT / DOCX / PDF)
+// ════════════════════════════════════════════════════════════════════
+
+function getActiveContent() {
+  const tab = getActiveTab();
+  return tab ? tab.content : '';
+}
+function getActiveName() {
+  const tab = getActiveTab();
+  return tab ? tab.name.replace(/\.(md|markdown|txt)$/i, '') : 'document';
+}
+
+function exportTxt() {
+  const md = getActiveContent();
+  if (!md) return showToast('⚠️ Không có nội dung');
+  const blob = new Blob([md], { type: 'text/plain;charset=utf-8' });
+  download(blob, getActiveName() + '.txt');
+  showToast('📄 Đã xuất TXT');
+}
+
+function exportPdf() {
+  const md = getActiveContent();
+  if (!md) return showToast('⚠️ Không có nội dung');
+  showToast('🖨️ Đang xuất PDF...');
+  const root = state.editMode
+    ? document.getElementById('preview-body')
+    : document.getElementById('md-body');
+  const html = root.innerHTML;
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>${getActiveName()}</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700&family=DM+Sans:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lora',Georgia,serif;font-size:11.5pt;line-height:1.85;color:#1a1814;background:#fff}
+@page{margin:2cm 2.5cm;size:A4}
+h1,h2,h3,h4{font-family:'Lora',serif;color:#1a1814;margin-top:1.2em;margin-bottom:0.4em;line-height:1.3}
+h1{font-size:22pt;border-bottom:2px solid #c17f3a;padding-bottom:6pt;margin-top:0}
+h2{font-size:16pt}h3{font-size:13pt}
+p{margin-bottom:1em}
+a{color:#c17f3a}
+code{font-family:'JetBrains Mono',monospace;font-size:9pt;background:#f4f2ee;border:1px solid #e5e0d8;border-radius:3pt;padding:1pt 5pt}
+pre{background:#f4f2ee;border:1px solid #e5e0d8;border-radius:6pt;padding:12pt;overflow:hidden;margin:1em 0;page-break-inside:avoid}
+pre code{background:none;border:none;padding:0;font-size:9pt}
+blockquote{border-left:3pt solid #c17f3a;background:#fdf5ec;padding:10pt 14pt;margin:1em 0;font-style:italic;color:#5a5050;border-radius:0 4pt 4pt 0}
+blockquote p{margin-bottom:0}
+table{width:100%;border-collapse:collapse;margin:1em 0;font-size:10pt;page-break-inside:avoid}
+th{background:#fdf5ec;color:#c17f3a;font-family:'DM Sans',sans-serif;font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;padding:7pt 10pt;text-align:left;border:1px solid #e8e4dc}
+td{padding:6pt 10pt;border:1px solid #e8e4dc}
+hr{border:none;border-top:1px solid #e8e4dc;margin:1.5em 0}
+ul,ol{padding-left:1.5em;margin-bottom:1em}
+li{margin-bottom:0.3em}
+img{max-width:100%;border-radius:4pt}
+.collapsible-wrap{margin:1em 0;border:1px solid #e5e0d8;border-radius:6pt}
+.collapsible-wrap.is-collapsed .collapsible-content{max-height:none !important;mask-image:none !important;-webkit-mask-image:none !important}
+.collapsible-header{padding:6pt 10pt;background:#fbfaf7;border-bottom:1px solid #e5e0d8;font-size:9pt;color:#6b6560}
+.collapsible-toggle{display:none}
+.lang-tag{color:#c17f3a;font-weight:700;font-family:'JetBrains Mono',monospace;font-size:8pt;text-transform:uppercase}
+.collapsible-wrap pre{margin:0;border:none;border-radius:0}
+.mermaid-wrap{margin:1em 0;text-align:center;padding:10pt;border:1px solid #e8e4dc;border-radius:6pt}
+.mermaid-wrap svg{max-width:100%}
+.katex-display{padding:10pt;background:#fdf5ec;border-radius:6pt;margin:1em 0}
+.page-header{font-family:'DM Sans',sans-serif;font-size:9pt;color:#a09890;margin-bottom:20pt;padding-bottom:6pt;border-bottom:1px solid #e8e4dc}
+</style></head><body>
+<div class="page-header">📄 ${getActiveName()} — Xuất bởi MD Reader Pro</div>
+${html}
+</body></html>`);
+  printWin.document.close();
+  printWin.onload = () => printWin.print();
+}
+
+function exportDocx() {
+  const md = getActiveContent();
+  if (!md) return showToast('⚠️ Không có nội dung');
+  showToast('📝 Đang tạo DOCX...');
+  buildDocx(md, getActiveName());
+}
+
+function buildDocx(rawMarkdown, fileName) {
+  const lines = rawMarkdown.split('\n');
+  let xmlBody = ''; let inCode = false; let codeLines = [];
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const inlineFormat = s => {
+    s = esc(s);
+    s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<w:r><w:rPr><w:b/><w:i/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/\*\*(.+?)\*\*/g, '<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/__(.+?)__/g, '<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/\*(.+?)\*/g, '<w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/_(.+?)_/g, '<w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/`(.+?)`/g, '<w:r><w:rPr><w:rFonts w:ascii="Courier New" w:hAnsi="Courier New"/><w:sz w:val="18"/><w:color w:val="C17F3A"/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/\[(.+?)\]\(.+?\)/g, '<w:r><w:rPr><w:color w:val="C17F3A"/><w:u w:val="single"/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/(?<!<w:t[^>]*>)([^<]+)(?!<\/w:t>)/g, (m, p1) => p1.trim() ? `<w:r><w:t xml:space="preserve">${p1}</w:t></w:r>` : m);
+    return s;
+  };
+  const para = (c, st='Normal') => `<w:p><w:pPr><w:pStyle w:val="${st}"/></w:pPr>${c}</w:p>`;
+  const textRun = t => `<w:r><w:t xml:space="preserve">${esc(t)}</w:t></w:r>`;
+
+  lines.forEach(line => {
+    if (line.startsWith('```')) {
+      if (!inCode) { inCode = true; codeLines = []; }
+      else {
+        inCode = false;
+        codeLines.forEach(cl => {
+          xmlBody += `<w:p><w:pPr><w:pStyle w:val="Normal"/><w:shd w:val="clear" w:color="auto" w:fill="F4F2EE"/><w:ind w:left="360" w:right="360"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Courier New" w:hAnsi="Courier New"/><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve">${esc(cl)}</w:t></w:r></w:p>`;
+        });
+      }
+      return;
+    }
+    if (inCode) { codeLines.push(line); return; }
+    if (/^######\s/.test(line)) xmlBody += para(textRun(line.slice(7)), 'Heading6');
+    else if (/^#####\s/.test(line)) xmlBody += para(textRun(line.slice(6)), 'Heading5');
+    else if (/^####\s/.test(line)) xmlBody += para(textRun(line.slice(5)), 'Heading4');
+    else if (/^###\s/.test(line)) xmlBody += para(textRun(line.slice(4)), 'Heading3');
+    else if (/^##\s/.test(line)) xmlBody += para(textRun(line.slice(3)), 'Heading2');
+    else if (/^#\s/.test(line)) xmlBody += para(textRun(line.slice(2)), 'Heading1');
+    else if (/^>\s/.test(line))
+      xmlBody += `<w:p><w:pPr><w:pStyle w:val="Normal"/><w:ind w:left="720"/><w:pBdr><w:left w:val="single" w:sz="24" w:space="14" w:color="C17F3A"/></w:pBdr></w:pPr><w:r><w:rPr><w:i/><w:color w:val="6B6560"/></w:rPr><w:t xml:space="preserve">${esc(line.slice(2))}</w:t></w:r></w:p>`;
+    else if (/^(\*|-|\+)\s/.test(line))
+      xmlBody += `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr>${textRun(line.replace(/^(\*|-|\+)\s/,''))}</w:p>`;
+    else if (/^\d+\.\s/.test(line))
+      xmlBody += `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="2"/></w:numPr></w:pPr>${textRun(line.replace(/^\d+\.\s/,''))}</w:p>`;
+    else if (/^---+$/.test(line.trim()))
+      xmlBody += `<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="4" w:space="1" w:color="E8E4DC"/></w:pBdr></w:pPr></w:p>`;
+    else if (line.trim() === '') xmlBody += `<w:p><w:pPr><w:spacing w:after="80"/></w:pPr></w:p>`;
+    else xmlBody += `<w:p><w:pPr><w:pStyle w:val="Normal"/></w:pPr>${inlineFormat(line)}</w:p>`;
+  });
+
+  const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>${xmlBody}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1418" w:bottom="1134" w:left="1418" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+
+  const mkH = (id, sz, c) => `<w:style w:type="paragraph" w:styleId="${id}"><w:name w:val="${id}"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="240" w:after="120"/></w:pPr><w:rPr><w:rFonts w:ascii="Lora" w:hAnsi="Lora"/><w:b/><w:sz w:val="${sz}"/><w:color w:val="${c}"/></w:rPr></w:style>`;
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Lora" w:hAnsi="Lora"/><w:sz w:val="22"/><w:lang w:val="vi-VN"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="160" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
+${mkH('Heading1',32,'1a1814')}${mkH('Heading2',26,'1a1814')}${mkH('Heading3',22,'1a1814')}${mkH('Heading4',20,'1a1814')}${mkH('Heading5',20,'6b6560')}${mkH('Heading6',20,'9d9288')}
+<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/><w:pPr><w:ind w:left="720"/></w:pPr></w:style>
+</w:styles>`;
+  const numbering = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>
+<w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>
+<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num><w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num></w:numbering>`;
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/></Relationships>`;
+  const appRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/></Types>`;
+
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', contentTypes);
+  zip.file('_rels/.rels', appRels);
+  zip.folder('word').file('document.xml', docXml);
+  zip.file('word/styles.xml', stylesXml);
+  zip.file('word/numbering.xml', numbering);
+  zip.file('word/_rels/document.xml.rels', relsXml);
+  zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+    .then(blob => {
+      download(blob, fileName + '.docx');
+      showToast('✅ Đã xuất DOCX');
+    });
+}
+
+function download(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function saveCurrentFile() {
+  const tab = getActiveTab();
+  if (!tab) return;
+  const blob = new Blob([tab.content], { type: 'text/markdown;charset=utf-8' });
+  const name = tab.name.endsWith('.md') ? tab.name : tab.name + '.md';
+  download(blob, name);
+  tab.edited = false;
+  renderTabsBar();
+  addRecent(name, tab.content);
+  showToast('💾 Đã lưu: ' + name);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   TOAST
+// ════════════════════════════════════════════════════════════════════
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   KEYBOARD SHORTCUTS
+// ════════════════════════════════════════════════════════════════════
+
+document.addEventListener('keydown', e => {
+  const ctrl = e.ctrlKey || e.metaKey;
+  if (ctrl && e.key === 'f') { e.preventDefault(); toggleSearch(); }
+  else if (ctrl && e.key === 'o') { e.preventDefault(); document.getElementById('file-input').click(); }
+  else if (ctrl && e.key === 'n') { e.preventDefault(); newEmptyTab(); }
+  else if (ctrl && e.key === 'w') { e.preventDefault(); if (state.activeTabId) closeTab(state.activeTabId); }
+  else if (ctrl && e.key === 'e') { e.preventDefault(); toggleEditMode(); }
+  else if (ctrl && e.key === 's') { e.preventDefault(); saveCurrentFile(); }
+  else if (ctrl && e.key === 'Tab') {
+    e.preventDefault();
+    if (state.tabs.length < 2) return;
+    const idx = state.tabs.findIndex(t => t.id === state.activeTabId);
+    const next = (idx + 1) % state.tabs.length;
+    switchTab(state.tabs[next].id);
+  }
+  else if (e.key === 'Escape') {
+    if (document.getElementById('search-bar').classList.contains('visible')) toggleSearch();
+    else if (document.getElementById('settings-panel').classList.contains('visible')) toggleSettings();
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════
+//                   PWA SERVICE WORKER
+// ════════════════════════════════════════════════════════════════════
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('✅ SW registered:', reg.scope))
+      .catch(err => console.warn('SW failed:', err));
+  });
+}
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show install hint
+  setTimeout(() => {
+    showToast('💡 Có thể cài app này lên thiết bị! Vào ⚙️ Cài đặt');
+  }, 2000);
+});
+
+// ════════════════════════════════════════════════════════════════════
+//                   SAMPLE
+// ════════════════════════════════════════════════════════════════════
+
+function loadSampleContent() {
+  const sample = `# 🎉 MD Reader Pro – Tính năng đầy đủ
+
+Chào mừng đến với phiên bản **Pro** với 6 nâng cấp lớn!
+
+## 📑 Tính năng chính
+
+- ✅ **Tabs nhiều file** – mở vài file cùng lúc
+- ✅ **File gần đây** – tự động lưu lịch sử
+- ✅ **Edit Mode** – chỉnh sửa với split view
+- ✅ **Mermaid + KaTeX** – sơ đồ và công thức toán
+- ✅ **Tùy chỉnh font/size** – đọc lâu không mỏi mắt
+- ✅ **TTS tiếng Việt** – nghe thay vì đọc
+- ✅ **PWA** – cài như app trên máy
+
+## 🧮 Công thức toán (KaTeX)
+
+Định lý Pythagoras: $a^2 + b^2 = c^2$
+
+Phương trình bậc hai có nghiệm:
+
+$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+
+Tổng dãy số:
+
+$$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
+
+## 📊 Sơ đồ Mermaid
+
+\`\`\`mermaid
+graph LR
+    A[User mở file MD] --> B{Có tab cũ?}
+    B -->|Có| C[Mở tab mới]
+    B -->|Không| D[Hiển thị nội dung]
+    C --> D
+    D --> E[Render Mermaid + KaTeX]
+    E --> F[Tận hưởng đọc!]
+\`\`\`
+
+\`\`\`mermaid
+sequenceDiagram
+    participant U as Người dùng
+    participant A as App
+    participant TTS as TTS Engine
+    U->>A: Click 🔊 Đọc to
+    A->>TTS: Lấy giọng tiếng Việt
+    TTS-->>A: Trả về voice
+    A->>TTS: speak(text)
+    TTS-->>U: 🎵 Phát âm thanh
+\`\`\`
+
+## 💻 Code mẫu
+
+\`\`\`javascript
+// Web Speech API - đọc tiếng Việt
+const utterance = new SpeechSynthesisUtterance("Xin chào!");
+utterance.lang = 'vi-VN';
+utterance.rate = 1.0;
+speechSynthesis.speak(utterance);
+\`\`\`
+
+\`\`\`python
+# Tính số fibonacci
+def fib(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+
+print([fib(i) for i in range(10)])
+\`\`\`
+
+## 📋 Bảng so sánh tính năng
+
+| Tính năng | Cơ bản | Pro |
+|-----------|:-:|:-:|
+| Đọc Markdown | ✅ | ✅ |
+| Tabs nhiều file | ❌ | ✅ |
+| Edit Mode | ❌ | ✅ |
+| Mermaid | ❌ | ✅ |
+| KaTeX | ❌ | ✅ |
+| TTS tiếng Việt | ❌ | ✅ |
+| Cài như app (PWA) | ❌ | ✅ |
+
+## 💡 Mẹo sử dụng
+
+> **Bật TTS để nghe đọc bài này!**
+> Nhấp 🔊 ở thanh công cụ trên cùng, chọn giọng tiếng Việt, bấm Play.
+
+> Vào ⚙️ **Cài đặt** để đổi font, kích cỡ chữ, chủ đề Sepia – rất hợp đọc lâu.
+
+## ⌨️ Phím tắt nhanh
+
+| Phím | Tác dụng |
+|------|----------|
+| \`Ctrl + O\` | Mở file |
+| \`Ctrl + N\` | Tab mới |
+| \`Ctrl + W\` | Đóng tab |
+| \`Ctrl + E\` | Vào/Thoát Edit Mode |
+| \`Ctrl + S\` | Lưu file đang mở |
+| \`Ctrl + F\` | Tìm kiếm |
+| \`Ctrl + Tab\` | Chuyển tab |
+
+---
+
+*Hãy thử mở Edit Mode (Ctrl+E) và sửa nội dung này — bạn sẽ thấy preview cập nhật real-time!* ✨
+`;
+  openFileAsTab('sample-pro.md', sample);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   INIT
+// ════════════════════════════════════════════════════════════════════
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+  initTTS();
+  renderRecent();
+});
+
+// Make inline onclick work for closeTab
+window.closeTab = closeTab;
+window.removeRecent = removeRecent;
+</script>
+</body>
+</html>
