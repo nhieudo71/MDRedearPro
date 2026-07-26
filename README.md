@@ -10,7 +10,8 @@ Trình đọc Markdown đẹp với giao diện như Claude — đầy đủ tí
 | **Productivity** | Tabs nhiều file · File gần đây (lịch sử 12 file) · Edit Mode (split view với preview) |
 | **Markdown nâng cao** | Mermaid diagrams · KaTeX công thức toán · Code highlight · Collapsible code blocks |
 | **Cá nhân hóa** | 6 fonts · Cỡ chữ · Khoảng cách dòng · Độ rộng cột |
-| **Đọc to** | TTS tiếng Việt · Chọn giọng · Tốc độ điều chỉnh |
+| **Dịch thuật** | Dịch đoạn chọn hoặc tài liệu hiện tại bằng Google Translate miễn phí |
+| **Đọc to** | TTS qua API Google Gemini · 30 giọng · Tốc độ điều chỉnh |
 | **Xuất file** | TXT · DOCX · PDF |
 | **PWA** | Cài như app · Hoạt động offline · Icon riêng |
 
@@ -59,6 +60,7 @@ Sau khi deploy với HTTPS, PWA sẽ tự động kích hoạt — người dùn
 | `Ctrl + E` | Vào/Thoát Edit Mode |
 | `Ctrl + S` | Lưu file đang sửa |
 | `Ctrl + F` | Tìm kiếm trong tài liệu |
+| `Ctrl + Shift + T` | Dịch bằng Google Translate |
 | `Ctrl + Tab` | Chuyển tab tiếp theo |
 | `Esc` | Đóng panel hiện tại |
 
@@ -91,7 +93,15 @@ Inline: $E = mc^2$
 Display: $$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$
 ```
 
-**TTS tiếng Việt:** Click 🔊 → chọn giọng có lang `vi-VN` → bấm Play. Trên Windows cần cài thêm voice tiếng Việt trong Settings → Time & Language → Speech.
+**Google Dịch:** Bôi đen một đoạn rồi bấm nút 🌐 trên thanh công cụ hoặc nhấn `Ctrl + Shift + T`. Nếu không bôi đen, app sẽ gửi nội dung tài liệu hiện tại sang Google Translate trong tab mới. Có thể đổi ngôn ngữ đích trong ⚙️ Cài đặt → **🌐 Google Dịch**.
+
+> ℹ️ Tính năng này không dùng API key và không tốn chi phí. Vì Google Translate nhận nội dung qua URL, tài liệu quá dài sẽ chỉ gửi phần đầu để tránh vượt giới hạn URL của trình duyệt.
+
+**TTS (Gemini):** Vào ⚙️ Cài đặt → mục **🔊 Giọng đọc Gemini** → nhập **API key** (lấy tại [aistudio.google.com/apikey](https://aistudio.google.com/apikey)), chọn **Model** + **Giọng đọc**. Sau đó click 🔊 trên thanh công cụ → bấm Play.
+
+> ℹ️ **Cách hoạt động:** App gọi thẳng API `gemini-2.5-flash-preview-tts` qua internet (endpoint Google có CORS nên **không cần server/proxy**). Gemini trả về audio **PCM thô (base64)**, app tự bọc header WAV rồi phát. Ngôn ngữ được **tự nhận diện** (gồm tiếng Việt).
+>
+> ⚠️ API key lưu trong `localStorage` của trình duyệt; **đừng deploy công khai** bản có nhúng key.
 
 **Lưu trữ:** Cài đặt và lịch sử file lưu trong `localStorage` của trình duyệt — không gửi lên server.
 
@@ -103,7 +113,7 @@ Display: $$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$
 - [Mermaid](https://mermaid.js.org/) — Diagram rendering
 - [KaTeX](https://katex.org/) — Math typesetting
 - [JSZip](https://stuk.github.io/jszip/) — DOCX export
-- Web Speech API — TTS
+- [Google Gemini TTS](https://ai.google.dev/gemini-api/docs/speech-generation) (REST `generateContent`) — TTS
 
 ---
 
