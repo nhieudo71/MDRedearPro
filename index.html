@@ -1037,7 +1037,8 @@
     </button>
     <input type="file" id="file-input" accept=".md,.markdown,.txt" style="display:none" multiple>
 
-    <button class="btn" id="import-btn" onclick="importDocument()" title="Nhập PDF, Word, Excel, PowerPoint, HTML, ảnh → Markdown (bản .exe)">
+    <input type="file" id="import-input" accept=".docx,.xlsx,.xls,.pptx,.pdf,.html,.htm,.png,.jpg,.jpeg,.bmp,.webp,.tif,.tiff" style="display:none" multiple>
+    <button class="btn" id="import-btn" onclick="importDocument()" title="Nhập PDF, Word, Excel, PowerPoint, HTML, ảnh → Markdown">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Nhập file
     </button>
@@ -2177,8 +2178,7 @@ contentEl.addEventListener('drop', e => {
     if (/\.(md|markdown|txt)$/i.test(f.name)) loadFileToTab(f);
     else if (CONVERT_RE.test(f.name)) {
       const p = window.electronAPI && window.electronAPI.getPathForFile ? window.electronAPI.getPathForFile(f) : '';
-      if (p) convertAndOpen(p, f.name);
-      else showToast('⚠️ Nhập file chỉ dùng được trong bản .exe');
+      convertAndOpen(p || f, f.name);
     }
   });
 });
@@ -2186,18 +2186,22 @@ contentEl.addEventListener('drop', e => {
 // ─── NHẬP FILE: PDF / Word / Excel / PowerPoint / HTML / ảnh → Markdown (main process) ───
 const CONVERT_RE = /\.(docx|doc|xlsx|xls|pptx|pdf|html?|png|jpe?g|bmp|webp|tiff?)$/i;
 
-async function convertAndOpen(filePath, fileName) {
+// src: đường dẫn (bản .exe, chuyển đổi ở main process) hoặc đối tượng File (bản trình duyệt)
+async function convertAndOpen(src, fileName) {
   const api = window.electronAPI;
-  if (!api) return showToast('⚠️ Nhập file chỉ dùng được trong bản .exe');
   const ext = (fileName.match(/\.([^.]+)$/) || [])[1].toLowerCase();
-  const map = {
-    docx: api.convertDocx, doc: api.convertDoc, xlsx: api.convertXlsx, xls: api.convertXls,
-    pptx: api.convertPptx, pdf: api.convertPdf, html: api.convertHtmlFile, htm: api.convertHtmlFile
-  };
-  const fn = map[ext] || api.convertImage;
   showToast('⏳ Đang chuyển đổi ' + fileName + '...');
   try {
-    const res = await fn(filePath);
+    let res;
+    if (api && typeof src === 'string') {
+      const map = {
+        docx: api.convertDocx, doc: api.convertDoc, xlsx: api.convertXlsx, xls: api.convertXls,
+        pptx: api.convertPptx, pdf: api.convertPdf, html: api.convertHtmlFile, htm: api.convertHtmlFile
+      };
+      res = await (map[ext] || api.convertImage)(src);
+    } else {
+      res = await webConvert(src, ext);
+    }
     const md = res && res.markdown ? res.markdown : '';
     if (!md.trim()) return showToast('⚠️ Không lấy được nội dung từ ' + fileName);
     openFileAsTab(fileName.replace(/\.[^.]+$/, '') + '.md', md);
@@ -2210,9 +2214,189 @@ async function convertAndOpen(filePath, fileName) {
   }
 }
 
+document.getElementById('import-input').addEventListener('change', function (e) {
+  Array.from(e.target.files).forEach(f => convertAndOpen(f, f.name));
+  this.value = '';
+});
+
+// ─── CHUYỂN ĐỔI TRONG TRÌNH DUYỆT (bản HTML, không có main process) ───
+// Thư viện nạp theo nhu cầu từ cdnjs, lần đầu cần mạng.
+const WEB_LIBS = {
+  mammoth: 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.13.0/mammoth.browser.min.js',
+  xlsx: 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  turndown: 'https://cdnjs.cloudflare.com/ajax/libs/turndown/7.2.4/turndown.js',
+  tesseract: 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/7.0.0/tesseract.min.js',
+  pdfjs: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/pdf.min.mjs',
+  pdfWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/pdf.worker.min.mjs'
+};
+const WEB_XLSX_MAX_ROWS = 200;
+const WEB_PDF_MAX_PAGES = 50;
+const _libCache = {};
+
+function loadScriptOnce(url) {
+  if (!_libCache[url]) {
+    _libCache[url] = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = url;
+      s.onload = resolve;
+      s.onerror = () => { delete _libCache[url]; reject(new Error('Không tải được thư viện (cần kết nối mạng)')); };
+      document.head.appendChild(s);
+    });
+  }
+  return _libCache[url];
+}
+
+const mdCellWeb = (v) => String(v ?? '').replace(/\r?\n/g, ' ').replace(/\|/g, '\\|').trim();
+
+function rowsToMdTable(rows) {
+  if (!rows.length) return '';
+  const w = Math.max(...rows.map(r => r.length), 1);
+  const norm = rows.map(r => Array.from({ length: w }, (_, i) => mdCellWeb(r[i])));
+  const [head, ...body] = norm;
+  return `| ${head.join(' | ')} |\n| ${head.map(() => '---').join(' | ')} |\n` +
+    body.map(r => `| ${r.join(' | ')} |\n`).join('');
+}
+
+async function webTurndown() {
+  await loadScriptOnce(WEB_LIBS.turndown);
+  const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
+  td.addRule('dropEmptyImg', {
+    filter: (n) => n.nodeName === 'IMG' && !(n.getAttribute('src') || '').trim(),
+    replacement: () => ''
+  });
+  td.addRule('tableToGfm', {
+    filter: 'table',
+    replacement: (content, node) => {
+      const rows = Array.from(node.querySelectorAll('tr')).map(tr =>
+        Array.from(tr.children).map(c => c.textContent));
+      return '\n\n' + rowsToMdTable(rows) + '\n';
+    }
+  });
+  return td;
+}
+
+async function webOcr(imageSource) {
+  await loadScriptOnce(WEB_LIBS.tesseract);
+  const worker = await Tesseract.createWorker('vie');
+  try {
+    const { data } = await worker.recognize(imageSource);
+    return (data.text || '').trim();
+  } finally {
+    await worker.terminate();
+  }
+}
+
+async function webPdf(file) {
+  const pdfjs = await import(WEB_LIBS.pdfjs);
+  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+    // Worker phải cùng nguồn gốc với trang, nên nạp mã qua blob
+    const code = await (await fetch(WEB_LIBS.pdfWorker)).text();
+    pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+  }
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  const maxPages = Math.min(doc.numPages, WEB_PDF_MAX_PAGES);
+  const texts = [];
+  const empty = [];
+  for (let i = 1; i <= maxPages; i++) {
+    const page = await doc.getPage(i);
+    const tc = await page.getTextContent();
+    texts[i] = tc.items.filter(it => it.str).map(it => it.str).join(' ').trim();
+    if (texts[i].length < 20) empty.push(i); // trang scan: gần như không có lớp chữ
+  }
+  let ocrPages = 0;
+  let ocrError = null;
+  for (const n of empty) {
+    try {
+      showToast(`⏳ OCR trang ${n}/${maxPages}...`);
+      const page = await doc.getPage(n);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), canvas, viewport }).promise;
+      const t = await webOcr(canvas);
+      if (t) { texts[n] = t; ocrPages++; }
+    } catch (e) {
+      ocrError = e.message;
+    }
+  }
+  let md = '';
+  for (let i = 1; i <= maxPages; i++) if (texts[i]) md += `## Trang ${i}\n\n${texts[i]}\n\n`;
+  return { markdown: md.trim(), totalPages: doc.numPages, renderedPages: maxPages, ocrPages, ocrError };
+}
+
+async function webXlsx(file) {
+  await loadScriptOnce(WEB_LIBS.xlsx);
+  const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+  let md = '';
+  for (const name of wb.SheetNames) {
+    md += `# ${name}\n\n`;
+    const all = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '', raw: false })
+      .filter(r => r.some(c => String(c).trim() !== ''));
+    if (!all.length) { md += '*(Sheet trống)*\n\n'; continue; }
+    md += rowsToMdTable(all.slice(0, WEB_XLSX_MAX_ROWS));
+    if (all.length > WEB_XLSX_MAX_ROWS) {
+      md += `\n*... (${all.length - WEB_XLSX_MAX_ROWS} dòng bị cắt để giới hạn kích thước) ...*\n`;
+    }
+    md += '\n';
+  }
+  return { markdown: md.trim() };
+}
+
+async function webDocx(file) {
+  await loadScriptOnce(WEB_LIBS.mammoth);
+  const result = await mammoth.convertToHtml(
+    { arrayBuffer: await file.arrayBuffer() },
+    { convertImage: mammoth.images.imgElement(async () => ({ src: '' })) }
+  );
+  const td = await webTurndown();
+  return { markdown: td.turndown(result.value).trim() };
+}
+
+async function webPptx(file) {
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const parser = new DOMParser();
+  const paraText = (p) => Array.from(p.getElementsByTagName('a:t')).map(t => t.textContent).join('').trim();
+  const slides = Object.keys(zip.files)
+    .map(n => ({ n, m: /^ppt\/slides\/slide(\d+)\.xml$/.exec(n) }))
+    .filter(x => x.m)
+    .sort((a, b) => Number(a.m[1]) - Number(b.m[1]));
+  let md = '';
+  for (const { n, m } of slides) {
+    const xml = parser.parseFromString(await zip.files[n].async('string'), 'application/xml');
+    const tables = Array.from(xml.getElementsByTagName('a:tbl')).map(tbl => {
+      const rows = Array.from(tbl.getElementsByTagName('a:tr')).map(tr =>
+        Array.from(tr.getElementsByTagName('a:tc')).map(tc => paraText(tc)));
+      tbl.parentNode.removeChild(tbl);
+      return rowsToMdTable(rows);
+    });
+    const paras = Array.from(xml.getElementsByTagName('a:p')).map(paraText).filter(Boolean);
+    if (!paras.length && !tables.length) continue;
+    const [title = '', ...rest] = paras;
+    md += `## Slide ${m[1]}${title ? ': ' + title : ''}\n\n`;
+    if (rest.length) md += rest.map(t => `- ${t}`).join('\n') + '\n\n';
+    for (const t of tables) md += t + '\n';
+  }
+  return { markdown: md.trim(), slides: slides.length };
+}
+
+async function webConvert(file, ext) {
+  if (ext === 'docx') return webDocx(file);
+  if (ext === 'xlsx' || ext === 'xls') return webXlsx(file);
+  if (ext === 'pptx') return webPptx(file);
+  if (ext === 'pdf') return webPdf(file);
+  if (ext === 'html' || ext === 'htm') {
+    const td = await webTurndown();
+    return { markdown: td.turndown(await file.text()).trim() };
+  }
+  if (ext === 'doc') throw new Error('File .doc cũ chỉ nhập được trong bản .exe. Hãy lưu lại thành .docx.');
+  showToast('⏳ Đang OCR ảnh (lần đầu tải model tiếng Việt)...');
+  return { markdown: await webOcr(file) };
+}
+
 async function importDocument() {
   const api = window.electronAPI;
-  if (!api || !api.fsImportDialog) return showToast('⚠️ Nhập file chỉ dùng được trong bản .exe');
+  if (!api || !api.fsImportDialog) return document.getElementById('import-input').click(); // bản trình duyệt
   const picked = await api.fsImportDialog();
   if (!picked) return;
   if (/\.(md|markdown|txt)$/i.test(picked.name)) {
