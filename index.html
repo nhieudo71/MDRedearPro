@@ -724,6 +724,92 @@
   /* ═══════════════════════════════════════════════════════════════
      SETTINGS PANEL
      ═══════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════
+     FORMAT BAR & EMOJI PICKER
+     ═══════════════════════════════════════════════════════════════ */
+  #fmt-bar {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #fmt-bar select {
+    font-family: var(--font-ui); font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 4px 6px; cursor: pointer; max-width: 120px;
+  }
+  .fmt-btn {
+    min-width: 28px; height: 28px; padding: 0 7px;
+    border: 1px solid transparent; border-radius: 6px;
+    background: transparent; color: var(--text-secondary);
+    font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .fmt-btn:hover { background: var(--accent-light); color: var(--accent); }
+  .fmt-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+  #emoji-wrap { position: relative; }
+  #emoji-pop {
+    display: none; position: absolute; top: 32px; left: 0; z-index: 600;
+    width: 240px; padding: 8px; gap: 2px; flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: var(--shadow-lg);
+  }
+  #emoji-pop.visible { display: flex; }
+  #emoji-pop button {
+    width: 32px; height: 32px; border: none; background: transparent;
+    border-radius: 6px; font-size: 18px; cursor: pointer;
+  }
+  #emoji-pop button:hover { background: var(--accent-light); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     TRANSLATE PANEL
+     ═══════════════════════════════════════════════════════════════ */
+  #translate-panel {
+    position: fixed; top: 0; right: 0;
+    width: 400px; height: 100%;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.06);
+    z-index: 500;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; flex-direction: column;
+  }
+  #translate-panel.visible { transform: translateX(0); }
+  .tr-select, .tr-input {
+    flex: 1; min-width: 0;
+    font-family: var(--font-ui); font-size: 12.5px;
+    color: var(--text-primary); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 8px;
+  }
+  .tr-select:focus, .tr-input:focus { outline: none; border-color: var(--accent); }
+  .tr-hint {
+    font-family: var(--font-ui); font-size: 11px;
+    color: var(--text-muted); line-height: 1.5; margin-top: 4px;
+  }
+  .tr-label {
+    font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text-muted); margin-bottom: 4px;
+  }
+  .tr-box {
+    max-height: 180px; overflow-y: auto; white-space: pre-wrap;
+    padding: 10px 12px; margin-bottom: 12px; border-radius: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    font-family: var(--reader-font); font-size: 14px; line-height: 1.6;
+    color: var(--text-primary);
+  }
+  .tr-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tr-status {
+    font-family: var(--font-ui); font-size: 12px;
+    color: var(--text-secondary); min-height: 16px;
+  }
+
   #settings-panel {
     position: fixed; top: 0; right: 0;
     width: 340px; height: 100%;
@@ -874,11 +960,6 @@
   #tts-bar .tts-btn.secondary:hover {
     background: var(--accent-light); color: var(--accent); border-color: var(--accent);
   }
-  #tts-bar #tts-download {
-    width: auto; border-radius: 17px; padding: 0 12px; gap: 5px;
-    font-size: 12px; font-weight: 600;
-  }
-  #tts-bar #tts-download:disabled { opacity: 0.5; cursor: not-allowed; }
   #tts-bar .tts-status {
     font-size: 12px; font-weight: 500;
     color: var(--text-secondary);
@@ -956,6 +1037,11 @@
     </button>
     <input type="file" id="file-input" accept=".md,.markdown,.txt" style="display:none" multiple>
 
+    <button class="btn" id="import-btn" onclick="importDocument()" title="Nhập PDF, Word, Excel, PowerPoint, HTML, ảnh → Markdown (bản .exe)">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Nhập file
+    </button>
+
     <button class="btn btn-icon" id="new-tab-btn" title="Tab mới (Ctrl+N)" onclick="newEmptyTab()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
@@ -972,15 +1058,19 @@
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     </button>
 
+    <button class="btn btn-icon" id="translate-toggle" title="Dịch (Ctrl+Shift+T)" onclick="toggleTranslate()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    </button>
+
     <button class="btn btn-icon" id="tts-toggle" title="Đọc to (Text-to-Speech)" onclick="toggleTTS()">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
     </button>
 
-    <button class="btn btn-icon" id="translate-toggle" title="Dịch bằng Google Translate" onclick="translateCurrent()">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-    </button>
-
     <div class="toolbar-spacer"></div>
+
+    <button class="btn btn-icon" id="font-dec-btn" title="Giảm cỡ chữ (Ctrl+-)" onclick="adjustFontSize(-1)" style="font-size:11px;font-weight:700">A−</button>
+    <span id="font-size-badge" style="font-size:11.5px; color: var(--text-muted); min-width:34px; text-align:center">17px</span>
+    <button class="btn btn-icon" id="font-inc-btn" title="Tăng cỡ chữ (Ctrl++)" onclick="adjustFontSize(1)" style="font-size:14px;font-weight:700">A+</button>
 
     <span id="word-count-badge" style="display:none; font-size: 11.5px; color: var(--text-muted); padding: 4px 10px; background: var(--border-subtle); border: 1px solid var(--border); border-radius: 20px;">—</span>
 
@@ -991,6 +1081,7 @@
     <div class="toolbar-divider"></div>
 
     <div class="export-group" id="export-group" style="display:none">
+      <button class="btn" onclick="exportMd()" title="Lưu thành file .md (Ctrl+S)">MD</button>
       <button class="btn" onclick="exportTxt()">TXT</button>
       <button class="btn" onclick="exportDocx()">DOCX</button>
       <button class="btn" onclick="exportPdf()">PDF</button>
@@ -1036,7 +1127,7 @@
         <div class="drop-area" id="drop-area" onclick="document.getElementById('file-input').click()">
           <div style="font-size:26px;margin-bottom:6px;">⬆️</div>
           <strong style="font-size:13px;color:var(--text-secondary)">Kéo thả file vào đây</strong>
-          <p>hoặc nhấp để chọn nhiều file .md</p>
+          <p>hoặc nhấp để chọn file .md. Dùng "Nhập file" để chuyển PDF, Word, Excel, PowerPoint, HTML, ảnh sang .md</p>
         </div>
         <div class="drop-quick">
           <button class="btn" onclick="loadSampleContent()">✨ Xem mẫu đầy đủ</button>
@@ -1065,6 +1156,42 @@
             <span style="margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0">
               <kbd>Ctrl+S</kbd> để lưu
             </span>
+          </div>
+          <div id="fmt-bar">
+            <select id="fmt-font" title="Font chữ" onchange="onFmtFont(this)">
+              <option value="">Font</option>
+              <option value="lora">Lora</option>
+              <option value="merriweather">Merriweather</option>
+              <option value="source">Source Serif</option>
+              <option value="inter">Inter</option>
+              <option value="dmsans">DM Sans</option>
+              <option value="mono">Mono</option>
+            </select>
+            <select id="fmt-size" title="Cỡ chữ" onchange="onFmtSize(this)">
+              <option value="">Cỡ</option>
+              <option value="12">12</option><option value="14">14</option><option value="16">16</option>
+              <option value="18">18</option><option value="20">20</option><option value="24">24</option>
+              <option value="28">28</option><option value="32">32</option>
+            </select>
+            <span class="fmt-sep"></span>
+            <button class="fmt-btn" title="Đậm (Ctrl+B)" onclick="wrapSelection('**', '**', 'chữ đậm')"><b>B</b></button>
+            <button class="fmt-btn" title="Nghiêng (Ctrl+I)" onclick="wrapSelection('*', '*', 'chữ nghiêng')"><i>I</i></button>
+            <button class="fmt-btn" title="Gạch ngang" onclick="wrapSelection('~~', '~~', 'chữ gạch')"><s>S</s></button>
+            <span class="fmt-sep"></span>
+            <button class="fmt-btn" title="Tiêu đề 1" onclick="fmtHeading(1)">H1</button>
+            <button class="fmt-btn" title="Tiêu đề 2" onclick="fmtHeading(2)">H2</button>
+            <button class="fmt-btn" title="Tiêu đề 3" onclick="fmtHeading(3)">H3</button>
+            <button class="fmt-btn" title="Danh sách" onclick="fmtList(false)">• List</button>
+            <button class="fmt-btn" title="Danh sách số" onclick="fmtList(true)">1. List</button>
+            <button class="fmt-btn" title="Trích dẫn" onclick="fmtQuote()">❝</button>
+            <button class="fmt-btn" title="Khối code" onclick="wrapSelection('```\n', '\n```', 'code')">{ }</button>
+            <button class="fmt-btn" title="Liên kết" onclick="wrapSelection('[', '](https://)', 'liên kết')">🔗</button>
+            <button class="fmt-btn" title="Đường kẻ ngang" onclick="insertAtCursor('\n\n---\n\n')">―</button>
+            <span class="fmt-sep"></span>
+            <div id="emoji-wrap">
+              <button class="fmt-btn" title="Chèn emoji" onclick="toggleEmojiPicker(event)">😀</button>
+              <div id="emoji-pop"></div>
+            </div>
           </div>
           <textarea id="editor-textarea" spellcheck="false" placeholder="# Bắt đầu viết Markdown ở đây..."></textarea>
         </div>
@@ -1139,7 +1266,7 @@
       <h3>📏 Kích cỡ chữ</h3>
       <div class="setting-row">
         <label>Cỡ chữ</label>
-        <input type="range" id="font-size-slider" min="14" max="22" step="1" value="17" oninput="setFontSize(this.value)">
+        <input type="range" id="font-size-slider" min="12" max="32" step="1" value="17" oninput="setFontSize(this.value)">
         <span class="val" id="font-size-val">17px</span>
       </div>
       <div class="setting-row">
@@ -1151,53 +1278,6 @@
         <label>Độ rộng cột</label>
         <input type="range" id="width-slider" min="640" max="1200" step="40" value="960" oninput="setWidth(this.value)">
         <span class="val" id="width-val">960</span>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <h3>🔊 Giọng đọc Gemini (TTS)</h3>
-      <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px">
-        Đọc bằng Google Gemini TTS. App gọi thẳng API qua internet (có CORS), không cần server.
-        Lấy API key tại <code>aistudio.google.com/apikey</code>. Tự nhận diện ngôn ngữ (gồm tiếng Việt).
-      </div>
-      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:4px">
-        <label>API key (lưu trong trình duyệt)</label>
-        <input type="password" id="gm-key" placeholder="AIza..." autocomplete="off"
-          oninput="setGemini('geminiKey', this.value)"
-          style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input,transparent);color:inherit;font-family:var(--font-mono);font-size:12px">
-      </div>
-      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:4px">
-        <label>Model</label>
-        <input type="text" id="gm-model" placeholder="gemini-2.5-flash-preview-tts"
-          oninput="setGemini('geminiModel', this.value)"
-          style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input,transparent);color:inherit;font-family:var(--font-mono);font-size:12px">
-      </div>
-      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:4px">
-        <label>Giọng đọc (voice)</label>
-        <select id="gm-voice" onchange="setGemini('geminiVoice', this.value)"
-          style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input,transparent);color:inherit;font-size:13px"></select>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <h3>🌐 Google Dịch</h3>
-      <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px">
-        Dịch miễn phí bằng Google Translate trong tab mới. App ưu tiên đoạn đang bôi đen; nếu không có vùng chọn sẽ gửi nội dung tài liệu hiện tại.
-      </div>
-      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:4px">
-        <label>Ngôn ngữ đích</label>
-        <select id="translate-target" onchange="setTranslateTarget(this.value)"
-          style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input,transparent);color:inherit;font-size:13px">
-          <option value="vi">Tiếng Việt</option>
-          <option value="en">English</option>
-          <option value="zh-CN">中文（简体）</option>
-          <option value="ja">日本語</option>
-          <option value="ko">한국어</option>
-          <option value="fr">Français</option>
-          <option value="de">Deutsch</option>
-          <option value="es">Español</option>
-          <option value="th">ไทย</option>
-        </select>
       </div>
     </div>
 
@@ -1215,7 +1295,6 @@
         <div><kbd>Ctrl+E</kbd> Chỉnh sửa</div>
         <div><kbd>Ctrl+S</kbd> Lưu file</div>
         <div><kbd>Ctrl+F</kbd> Tìm kiếm</div>
-        <div><kbd>Ctrl+Shift+T</kbd> Google Dịch</div>
         <div><kbd>Ctrl+Tab</kbd> Tab tiếp theo</div>
       </div>
     </div>
@@ -1223,6 +1302,79 @@
 </div>
 
 <!-- ═══════════════ TTS BAR ═══════════════ -->
+<!-- ═══════════════ TRANSLATE PANEL ═══════════════ -->
+<div id="translate-panel">
+  <div class="settings-head">
+    <h2>🌐 Dịch</h2>
+    <button class="btn btn-icon" onclick="toggleTranslate()" title="Đóng (Esc)">✕</button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-section">
+      <h3>Dịch vụ</h3>
+      <div class="setting-row">
+        <label>Nhà cung cấp</label>
+        <select id="tr-provider" class="tr-select" onchange="onTrProviderChange()">
+          <option value="google">Google Translate</option>
+          <option value="gemini">Gemini</option>
+          <option value="openai">API tương thích OpenAI</option>
+        </select>
+      </div>
+      <div class="setting-row" id="tr-baseurl-row" style="display:none">
+        <label>Base URL</label>
+        <input type="text" id="tr-baseurl" class="tr-input" placeholder="http://localhost:11434/v1" onchange="saveTrSettings()">
+      </div>
+      <div class="setting-row" id="tr-model-row" style="display:none">
+        <label>Model</label>
+        <select id="tr-model" class="tr-select" onchange="saveTrSettings()"></select>
+        <button class="btn btn-icon" onclick="refreshTrModels()" title="Quét lại danh sách model">↻</button>
+      </div>
+      <div class="setting-row">
+        <label>Ngôn ngữ đích</label>
+        <select id="tr-target" class="tr-select" onchange="saveTrSettings()"></select>
+      </div>
+      <div class="setting-row">
+        <label>Phạm vi</label>
+        <select id="tr-scope" class="tr-select">
+          <option value="auto">Đoạn đang chọn (không chọn thì cả tài liệu)</option>
+          <option value="all">Cả tài liệu</option>
+        </select>
+      </div>
+      <div class="tr-hint">Google Translate không cần khóa. Dịch vụ này dùng endpoint không chính thức nên có thể bị giới hạn.</div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Khóa API</h3>
+      <div class="setting-row" id="tr-key-gemini" style="display:none">
+        <label>Gemini</label>
+        <input type="password" id="tr-key-gemini-input" class="tr-input" placeholder="Dán khóa mới" autocomplete="off">
+        <button class="btn" onclick="saveTrKey('gemini')">Lưu</button>
+        <span class="val" id="tr-key-gemini-status"></span>
+      </div>
+      <div class="setting-row" id="tr-key-openai" style="display:none">
+        <label>Khóa</label>
+        <input type="password" id="tr-key-openai-input" class="tr-input" placeholder="Không bắt buộc với endpoint nội bộ" autocomplete="off">
+        <button class="btn" onclick="saveTrKey('openai')">Lưu</button>
+        <span class="val" id="tr-key-openai-status"></span>
+      </div>
+      <div class="tr-hint">Để trống ô nhập rồi bấm Lưu để xóa khóa đã lưu. Khóa được mã hóa và không hiển thị lại.</div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Kết quả</h3>
+      <div class="tr-label">Bản gốc</div>
+      <div class="tr-box" id="tr-source"></div>
+      <div class="tr-label">Bản dịch</div>
+      <div class="tr-box" id="tr-result">Chưa có kết quả.</div>
+      <div class="tr-actions">
+        <button class="btn btn-primary" id="tr-run" onclick="runTranslate()">Dịch</button>
+        <button class="btn" onclick="copyTranslation()">Sao chép</button>
+        <button class="btn" onclick="insertTranslation()">Thay vào đoạn gốc</button>
+      </div>
+      <div class="tr-status" id="tr-status"></div>
+    </div>
+  </div>
+</div>
+
 <div id="tts-bar">
   <button class="tts-btn" id="tts-play" onclick="ttsToggle()" title="Phát/Tạm dừng">
     <svg id="tts-icon-play" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -1238,10 +1390,6 @@
     <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="1" oninput="ttsRateChange(this.value)">
     <span class="val" id="tts-rate-val" style="color:var(--accent);font-weight:600;font-family:var(--font-mono);font-size:10px;min-width:24px">1.0x</span>
   </div>
-  <button class="tts-btn secondary" id="tts-download" onclick="ttsDownload()" title="Tải file âm thanh WAV">
-    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    WAV
-  </button>
   <button class="tts-btn secondary" onclick="toggleTTS()" title="Đóng">✕</button>
 </div>
 
@@ -1269,12 +1417,7 @@ const state = {
     font: 'lora',
     fontSize: 17,
     lineHeight: 1.85,
-    width: 960,
-    translateTarget: 'vi',
-    // Google Gemini TTS (REST, CORS-enabled). Key is entered in-app, stored locally.
-    geminiKey: '',
-    geminiModel: 'gemini-2.5-flash-preview-tts',
-    geminiVoice: 'Kore'
+    width: 960
   },
   tts: {
     enabled: false,
@@ -1283,7 +1426,8 @@ const state = {
     rate: 1,
     voice: null,
     sentences: [],
-    currentIdx: 0
+    currentIdx: 0,
+    utterance: null
   }
 };
 
@@ -1371,25 +1515,11 @@ function applySettings() {
 
   document.getElementById('font-size-slider').value = s.fontSize;
   document.getElementById('font-size-val').textContent = s.fontSize + 'px';
+  document.getElementById('font-size-badge').textContent = s.fontSize + 'px';
   document.getElementById('line-height-slider').value = Math.round(s.lineHeight * 10);
   document.getElementById('line-height-val').textContent = s.lineHeight.toFixed(2);
   document.getElementById('width-slider').value = s.width;
   document.getElementById('width-val').textContent = s.width;
-
-  // Gemini TTS config fields
-  document.getElementById('gm-key').value = s.geminiKey || '';
-  document.getElementById('gm-model').value = s.geminiModel || '';
-  const gmVoiceSel = document.getElementById('gm-voice');
-  if (gmVoiceSel && !gmVoiceSel.options.length) {
-    GEMINI_VOICES.forEach(v => {
-      const opt = document.createElement('option');
-      opt.value = v; opt.textContent = v;
-      gmVoiceSel.appendChild(opt);
-    });
-  }
-  if (gmVoiceSel) gmVoiceSel.value = s.geminiVoice || 'Kore';
-  const translateTarget = document.getElementById('translate-target');
-  if (translateTarget) translateTarget.value = s.translateTarget || 'vi';
 
   // Update mermaid theme
   if (window.mermaid) {
@@ -1401,6 +1531,129 @@ function applySettings() {
     });
   }
 }
+
+// ════════════════════════════════════════════════════════════════════
+//                   MARKDOWN FORMATTING (thanh định dạng của editor)
+// ════════════════════════════════════════════════════════════════════
+
+const FONT_CSS = {
+  lora: "'Lora', Georgia, serif",
+  merriweather: "'Merriweather', serif",
+  source: "'Source Serif Pro', serif",
+  inter: "'Inter', sans-serif",
+  dmsans: "'DM Sans', sans-serif",
+  mono: "'JetBrains Mono', monospace"
+};
+
+const EMOJIS = ['😀','😂','😍','😎','🤔','😢','😡','👍','👎','👏','🙏','💪','🔥','✨','🎉','❤️','⭐','✅','❌','⚠️','💡','📌','📝','📚','🚀','💻','🐛','🔧','📅','📎','🔗','📷','🎯','☕','🌟','🌈','🍀','🌍','📈','🧠'];
+
+function getEditor() { return document.getElementById('editor-textarea'); }
+
+function editorReady() {
+  if (state.editMode && getActiveTab()) return true;
+  showToast('⚠️ Bật chế độ chỉnh sửa (Ctrl+E) trước');
+  return false;
+}
+
+// Gửi sự kiện input để editor cập nhật tab và preview như khi gõ phím
+function commitEditorChange(ta) {
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  ta.focus();
+}
+
+// Bao vùng chọn bằng before/after. Không chọn gì thì dùng placeholder và chọn luôn placeholder.
+function wrapSelection(before, after, placeholder) {
+  if (!editorReady()) return;
+  const ta = getEditor();
+  const s = ta.selectionStart;
+  const e = ta.selectionEnd;
+  const text = ta.value.slice(s, e) || placeholder;
+  ta.setRangeText(before + text + after, s, e, 'end');
+  ta.setSelectionRange(s + before.length, s + before.length + text.length);
+  commitEditorChange(ta);
+}
+
+function insertAtCursor(text) {
+  if (!editorReady()) return;
+  const ta = getEditor();
+  ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, 'end');
+  commitEditorChange(ta);
+}
+
+// Áp dụng hàm biến đổi cho từng dòng trong vùng chọn
+function transformLines(fn) {
+  if (!editorReady()) return;
+  const ta = getEditor();
+  const s = ta.selectionStart;
+  const e = ta.selectionEnd;
+  const value = ta.value;
+  const lineStart = s === 0 ? 0 : value.lastIndexOf('\n', s - 1) + 1;
+  let lineEnd = value.indexOf('\n', e);
+  if (lineEnd === -1) lineEnd = value.length;
+  const block = value.slice(lineStart, lineEnd).split('\n').map(fn).join('\n');
+  ta.setRangeText(block, lineStart, lineEnd, 'select');
+  commitEditorChange(ta);
+}
+
+function fmtHeading(level) {
+  transformLines(l => '#'.repeat(level) + ' ' + l.replace(/^#{1,6}\s+/, ''));
+}
+
+function fmtList(ordered) {
+  let n = 0;
+  transformLines(l => {
+    if (!l.trim()) return l;
+    n++;
+    const body = l.replace(/^\s*(?:[-*+]|\d+\.)\s+/, '');
+    return (ordered ? `${n}. ` : '- ') + body;
+  });
+}
+
+function fmtQuote() {
+  transformLines(l => (l.trim() ? '> ' + l.replace(/^>\s?/, '') : l));
+}
+
+// Font và cỡ chữ dùng <span style>. Markdown renderer của app cho phép HTML inline.
+function fmtSpan(style, placeholder) {
+  wrapSelection(`<span style="${style}">`, '</span>', placeholder);
+}
+
+function onFmtFont(sel) {
+  const key = sel.value;
+  sel.selectedIndex = 0;
+  if (key && FONT_CSS[key]) fmtSpan('font-family:' + FONT_CSS[key], 'văn bản');
+}
+
+function onFmtSize(sel) {
+  const size = sel.value;
+  sel.selectedIndex = 0;
+  if (size) fmtSpan('font-size:' + size + 'px', 'văn bản');
+}
+
+function buildEmojiPicker() {
+  const pop = document.getElementById('emoji-pop');
+  EMOJIS.forEach(em => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = em;
+    b.onclick = () => pickEmoji(em);
+    pop.appendChild(b);
+  });
+}
+
+function toggleEmojiPicker(ev) {
+  ev.stopPropagation();
+  document.getElementById('emoji-pop').classList.toggle('visible');
+}
+
+function pickEmoji(em) {
+  document.getElementById('emoji-pop').classList.remove('visible');
+  insertAtCursor(em);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#emoji-wrap')) document.getElementById('emoji-pop').classList.remove('visible');
+});
 
 function setTheme(t) {
   state.settings.theme = t;
@@ -1422,6 +1675,11 @@ function setFontSize(v) {
   saveSettings();
 }
 
+function adjustFontSize(delta) {
+  const next = Math.min(32, Math.max(12, state.settings.fontSize + delta));
+  if (next !== state.settings.fontSize) setFontSize(next);
+}
+
 function setLineHeight(v) {
   state.settings.lineHeight = parseInt(v) / 10;
   applySettings();
@@ -1434,32 +1692,91 @@ function setWidth(v) {
   saveSettings();
 }
 
-function setGemini(key, value) {
-  state.settings[key] = value.trim();
-  saveSettings();
-  // Reflect voice into the live TTS bar selection
-  if (key === 'geminiVoice') {
-    state.tts.voice = state.settings.geminiVoice;
-    const bar = document.getElementById('tts-voice');
-    if (bar) bar.value = state.settings.geminiVoice;
-  }
-}
-
-function setTranslateTarget(value) {
-  state.settings.translateTarget = value;
-  saveSettings();
-}
-
 function resetSettings() {
-  // Keep Gemini key/model/voice so users don't lose their TTS config
-  const { geminiKey, geminiModel, geminiVoice, translateTarget } = state.settings;
-  state.settings = {
-    theme: 'light', font: 'lora', fontSize: 17, lineHeight: 1.85, width: 960,
-    translateTarget, geminiKey, geminiModel, geminiVoice
-  };
+  state.settings = { theme: 'light', font: 'lora', fontSize: 17, lineHeight: 1.85, width: 960 };
   applySettings();
   saveSettings();
   showToast('↻ Đã khôi phục mặc định');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//                   TRANSLATE (Google / Gemini / OpenAI-compatible)
+// ════════════════════════════════════════════════════════════════════
+
+const TR_LANGS = [
+  { code: 'vi', name: 'Vietnamese' },
+  { code: 'en', name: 'English' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'ko', name: 'Korean' },
+  { code: 'zh-CN', name: 'Chinese (Simplified)' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'es', name: 'Spanish' }
+];
+const TR_SETTINGS_KEY = 'mdr-translate-settings';
+// last: nguồn dịch gần nhất (vùng chọn và nội dung editor lúc dịch) để chèn đúng chỗ
+const trState = { busy: false, last: null, result: '' };
+
+function loadTrSettings() {
+  const defaults = { provider: 'google', targetCode: 'vi', model: '', baseUrl: '' };
+  try {
+    return { ...defaults, ...JSON.parse(localStorage.getItem(TR_SETTINGS_KEY)) };
+  } catch {
+    return defaults;
+  }
+}
+
+// Chỉ lưu cấu hình. Khóa API không bao giờ đi qua localStorage.
+function saveTrSettings() {
+  localStorage.setItem(TR_SETTINGS_KEY, JSON.stringify({
+    provider: document.getElementById('tr-provider').value,
+    targetCode: document.getElementById('tr-target').value,
+    model: document.getElementById('tr-model').value,
+    baseUrl: document.getElementById('tr-baseurl').value.trim()
+  }));
+}
+
+function setTrStatus(msg, isError = false) {
+  const el = document.getElementById('tr-status');
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--danger)' : 'var(--text-secondary)';
+}
+
+function setModelOptions(models, selected) {
+  const sel = document.getElementById('tr-model');
+  const list = [...new Set([selected, ...models].filter(Boolean))];
+  sel.innerHTML = '';
+  if (!list.length) {
+    sel.add(new Option('— Chưa có model, bấm ↻ để quét —', ''));
+    return;
+  }
+  list.forEach(m => sel.add(new Option(m, m)));
+  sel.value = selected && list.includes(selected) ? selected : list[0];
+}
+
+function onTrProviderChange(autoRefresh = true) {
+  const p = document.getElementById('tr-provider').value;
+  const llm = p !== 'google';
+  document.getElementById('tr-model-row').style.display = llm ? 'flex' : 'none';
+  document.getElementById('tr-baseurl-row').style.display = p === 'openai' ? 'flex' : 'none';
+  document.getElementById('tr-key-gemini').style.display = p === 'gemini' ? 'flex' : 'none';
+  document.getElementById('tr-key-openai').style.display = p === 'openai' ? 'flex' : 'none';
+  if (llm) {
+    const cfg = loadTrSettings();
+    setModelOptions([], cfg.provider === p ? cfg.model : '');
+    if (autoRefresh) refreshTrModels();
+  }
+  saveTrSettings();
+}
+
+function initTranslatePanel() {
+  const cfg = loadTrSettings();
+  const tgt = document.getElementById('tr-target');
+  TR_LANGS.forEach(l => tgt.add(new Option(l.name, l.code)));
+  tgt.value = cfg.targetCode;
+  document.getElementById('tr-provider').value = cfg.provider;
+  document.getElementById('tr-baseurl').value = cfg.baseUrl;
+  onTrProviderChange(false);
 }
 
 function toggleSettings() {
@@ -1540,6 +1857,138 @@ function closeTab(id, ev) {
     }
   }
   renderTabsBar();
+}
+
+async function refreshTrModels() {
+  const provider = document.getElementById('tr-provider').value;
+  if (provider === 'google') return;
+  if (!window.electronAPI) { setTrStatus('Chỉ dùng được trong ứng dụng desktop.', true); return; }
+  setTrStatus('Đang quét model...');
+  const res = await window.electronAPI.translateListModels({
+    provider,
+    baseUrl: document.getElementById('tr-baseurl').value.trim()
+  });
+  // Bỏ kết quả nếu người dùng đã đổi nhà cung cấp trong lúc chờ
+  if (document.getElementById('tr-provider').value !== provider) return;
+  if (!res.ok) { setTrStatus(res.error, true); return; }
+  setModelOptions(res.models, document.getElementById('tr-model').value);
+  saveTrSettings();
+  setTrStatus(`Tìm thấy ${res.models.length} model`);
+}
+
+async function refreshKeyStatus() {
+  if (!window.electronAPI) return;
+  const st = await window.electronAPI.secretStatus();
+  document.getElementById('tr-key-gemini-status').textContent = st.gemini ? '✓ Đã lưu' : 'Chưa có';
+  document.getElementById('tr-key-openai-status').textContent = st.openai ? '✓ Đã lưu' : 'Không bắt buộc';
+  if (!st.encryptionAvailable) setTrStatus('Hệ điều hành không hỗ trợ mã hóa, không lưu được khóa API.', true);
+}
+
+async function saveTrKey(name) {
+  if (!window.electronAPI) { setTrStatus('Chỉ dùng được trong ứng dụng desktop.', true); return; }
+  const input = document.getElementById(`tr-key-${name}-input`);
+  const value = input.value.trim();
+  input.value = '';
+  const res = await window.electronAPI.secretSet({ name, value });
+  if (!res.ok) { setTrStatus(res.error, true); return; }
+  setTrStatus(value ? 'Đã lưu khóa API' : 'Đã xóa khóa API');
+  refreshKeyStatus();
+  if (name === 'gemini' && document.getElementById('tr-provider').value === 'gemini') refreshTrModels();
+}
+
+// Lấy nội dung cần dịch: đoạn đang chọn trong editor, hoặc toàn bộ tài liệu
+function getTranslateSource() {
+  const tab = getActiveTab();
+  if (!tab) return null;
+  if (state.editMode) {
+    const ta = getEditor();
+    const s = ta.selectionStart;
+    const e = ta.selectionEnd;
+    const value = ta.value;
+    const useSelection = document.getElementById('tr-scope').value === 'auto' && s !== e;
+    if (useSelection) {
+      return { text: value.slice(s, e), scopeLabel: 'Đoạn chọn', range: { start: s, end: e }, editorValue: value };
+    }
+    return { text: value, scopeLabel: 'Toàn bộ tài liệu', range: { start: 0, end: value.length }, editorValue: value };
+  }
+  return { text: tab.content, scopeLabel: 'Toàn bộ tài liệu', range: null, editorValue: null };
+}
+
+function toggleTranslate() {
+  const panel = document.getElementById('translate-panel');
+  const open = !panel.classList.contains('visible');
+  if (open && document.getElementById('settings-panel').classList.contains('visible')) toggleSettings();
+  panel.classList.toggle('visible', open);
+  if (open) {
+    refreshKeyStatus();
+    const src = getTranslateSource();
+    document.getElementById('tr-source').textContent = src ? src.text : 'Mở một file để dịch.';
+  }
+}
+
+async function runTranslate() {
+  if (trState.busy) return;
+  const src = getTranslateSource();
+  if (!src) { showToast('⚠️ Mở hoặc tạo file trước'); return; }
+  if (!src.text.trim()) { setTrStatus('Không có nội dung để dịch.', true); return; }
+  if (!window.electronAPI) { setTrStatus('Chỉ dùng được trong ứng dụng desktop.', true); return; }
+  const provider = document.getElementById('tr-provider').value;
+  const target = TR_LANGS.find(l => l.code === document.getElementById('tr-target').value) || TR_LANGS[0];
+  const btn = document.getElementById('tr-run');
+  trState.busy = true;
+  btn.disabled = true;
+  document.getElementById('tr-source').textContent = src.text;
+  setTrStatus(`Đang dịch sang ${target.name}...`);
+  let res;
+  try {
+    res = await window.electronAPI.translate({
+      provider,
+      text: src.text,
+      targetCode: target.code,
+      targetName: target.name,
+      model: document.getElementById('tr-model').value,
+      baseUrl: document.getElementById('tr-baseurl').value.trim()
+    });
+  } catch (err) {
+    res = { ok: false, error: err.message || String(err) };
+  } finally {
+    trState.busy = false;
+    btn.disabled = false;
+  }
+  if (!res.ok) { setTrStatus(res.error, true); return; }
+  trState.last = src;
+  trState.result = res.text;
+  document.getElementById('tr-result').textContent = res.text;
+  saveTrSettings();
+  setTrStatus(`Đã dịch (${src.scopeLabel.toLowerCase()}) sang ${target.name}`);
+}
+
+async function copyTranslation() {
+  if (!trState.result) { setTrStatus('Chưa có bản dịch.', true); return; }
+  try {
+    await navigator.clipboard.writeText(trState.result);
+    showToast('✅ Đã sao chép bản dịch');
+  } catch {
+    setTrStatus('Không sao chép được.', true);
+  }
+}
+
+// Thay vùng đã dịch bằng bản dịch. Chỉ chèn khi nội dung editor không đổi từ lúc dịch.
+function insertTranslation() {
+  if (!trState.result || !trState.last) { setTrStatus('Chưa có bản dịch.', true); return; }
+  const { range, editorValue } = trState.last;
+  if (!state.editMode || !range) {
+    setTrStatus('Bật chế độ chỉnh sửa (Ctrl+E) rồi dịch lại để chèn.', true);
+    return;
+  }
+  const ta = getEditor();
+  if (ta.value !== editorValue) {
+    setTrStatus('Nội dung đã thay đổi từ lúc dịch. Hãy dịch lại.', true);
+    return;
+  }
+  ta.setRangeText(trState.result, range.start, range.end, 'end');
+  commitEditorChange(ta);
+  showToast('✅ Đã thay bằng bản dịch');
 }
 
 function getTab(id) { return state.tabs.find(t => t.id === id); }
@@ -1726,8 +2175,65 @@ contentEl.addEventListener('drop', e => {
   e.preventDefault();
   Array.from(e.dataTransfer.files).forEach(f => {
     if (/\.(md|markdown|txt)$/i.test(f.name)) loadFileToTab(f);
+    else if (CONVERT_RE.test(f.name)) {
+      const p = window.electronAPI && window.electronAPI.getPathForFile ? window.electronAPI.getPathForFile(f) : '';
+      if (p) convertAndOpen(p, f.name);
+      else showToast('⚠️ Nhập file chỉ dùng được trong bản .exe');
+    }
   });
 });
+
+// ─── NHẬP FILE: PDF / Word / Excel / PowerPoint / HTML / ảnh → Markdown (main process) ───
+const CONVERT_RE = /\.(docx|doc|xlsx|xls|pptx|pdf|html?|png|jpe?g|bmp|webp|tiff?)$/i;
+
+async function convertAndOpen(filePath, fileName) {
+  const api = window.electronAPI;
+  if (!api) return showToast('⚠️ Nhập file chỉ dùng được trong bản .exe');
+  const ext = (fileName.match(/\.([^.]+)$/) || [])[1].toLowerCase();
+  const map = {
+    docx: api.convertDocx, doc: api.convertDoc, xlsx: api.convertXlsx, xls: api.convertXls,
+    pptx: api.convertPptx, pdf: api.convertPdf, html: api.convertHtmlFile, htm: api.convertHtmlFile
+  };
+  const fn = map[ext] || api.convertImage;
+  showToast('⏳ Đang chuyển đổi ' + fileName + '...');
+  try {
+    const res = await fn(filePath);
+    const md = res && res.markdown ? res.markdown : '';
+    if (!md.trim()) return showToast('⚠️ Không lấy được nội dung từ ' + fileName);
+    openFileAsTab(fileName.replace(/\.[^.]+$/, '') + '.md', md);
+    let msg = '✅ Đã chuyển ' + fileName + ' sang Markdown';
+    if (res.ocrPages) msg += ' (OCR ' + res.ocrPages + ' trang)';
+    if (res.renderedPages && res.totalPages > res.renderedPages) msg += ' - chỉ ' + res.renderedPages + '/' + res.totalPages + ' trang';
+    showToast(msg);
+  } catch (err) {
+    showToast('⚠️ Lỗi chuyển đổi: ' + (err.message || err));
+  }
+}
+
+async function importDocument() {
+  const api = window.electronAPI;
+  if (!api || !api.fsImportDialog) return showToast('⚠️ Nhập file chỉ dùng được trong bản .exe');
+  const picked = await api.fsImportDialog();
+  if (!picked) return;
+  if (/\.(md|markdown|txt)$/i.test(picked.name)) {
+    const f = await api.fsRead(picked.path);
+    openFileAsTab(f.name, f.content);
+  } else {
+    convertAndOpen(picked.path, picked.name);
+  }
+}
+
+// Mở file .md bấm đúp từ Explorer
+if (window.electronAPI && window.electronAPI.onFileOpenExternal) {
+  window.electronAPI.onFileOpenExternal(async (filePath) => {
+    try {
+      const f = await window.electronAPI.fsRead(filePath);
+      openFileAsTab(f.name, f.content);
+    } catch (err) {
+      showToast('⚠️ Không mở được file: ' + (err.message || err));
+    }
+  });
+}
 
 function loadFileToTab(file) {
   const reader = new FileReader();
@@ -2044,44 +2550,38 @@ document.getElementById('editor-textarea').addEventListener('scroll', e => {
 });
 
 // ════════════════════════════════════════════════════════════════════
-//                   TTS (Google Gemini — REST)
+//                   TTS (Text-to-Speech)
 // ════════════════════════════════════════════════════════════════════
-// Replaces the browser Web Speech API. Each sentence is synthesized by the
-// Gemini TTS model via generativelanguage.googleapis.com (CORS-enabled, so
-// the browser calls it directly — no server needed). Gemini returns raw PCM
-// (signed 16-bit LE) base64, which we wrap in a WAV header to play through
-// an <audio> element. API key, model and voice are set in ⚙️ Cài đặt.
 
-// Prebuilt Gemini TTS voices (https://ai.google.dev/gemini-api/docs/speech-generation).
-const GEMINI_VOICES = [
-  'Zephyr','Puck','Charon','Kore','Fenrir','Leda','Orus','Aoede','Callirrhoe',
-  'Autonoe','Enceladus','Iapetus','Umbriel','Algieba','Despina','Erinome',
-  'Algenib','Rasalgethi','Laomedeia','Achernar','Alnilam','Schedar','Gacrux',
-  'Pulcherrima','Achird','Zubenelgenubi','Vindemiatrix','Sadachbia',
-  'Sadaltager','Sulafat'
-];
-
-let ttsAudio = null;       // current HTMLAudioElement
-let ttsObjectUrl = null;   // current blob URL (revoked on cleanup)
+let ttsVoices = [];
 
 function initTTS() {
-  const sel = document.getElementById('tts-voice');
-  sel.innerHTML = '';
-  GEMINI_VOICES.forEach(v => {
-    const opt = document.createElement('option');
-    opt.value = v;
-    opt.textContent = v;
-    sel.appendChild(opt);
-  });
-  sel.value = state.settings.geminiVoice || 'Kore';
-  state.tts.voice = sel.value;
-  sel.onchange = () => {
-    state.tts.voice = sel.value;
-    state.settings.geminiVoice = sel.value;
-    const field = document.getElementById('gm-voice');
-    if (field) field.value = sel.value;
-    saveSettings();
+  if (!('speechSynthesis' in window)) {
+    document.getElementById('tts-toggle').style.display = 'none';
+    return;
+  }
+  const populate = () => {
+    ttsVoices = speechSynthesis.getVoices();
+    const sel = document.getElementById('tts-voice');
+    sel.innerHTML = '';
+    // Vietnamese first
+    const vi = ttsVoices.filter(v => v.lang.startsWith('vi'));
+    const en = ttsVoices.filter(v => v.lang.startsWith('en'));
+    const others = ttsVoices.filter(v => !v.lang.startsWith('vi') && !v.lang.startsWith('en'));
+    [...vi, ...en, ...others].forEach((v, i) => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      sel.appendChild(opt);
+    });
+    if (vi.length) sel.value = vi[0].name;
+    sel.onchange = () => {
+      state.tts.voice = ttsVoices.find(v => v.name === sel.value);
+    };
+    state.tts.voice = vi[0] || ttsVoices[0];
   };
+  populate();
+  speechSynthesis.onvoiceschanged = populate;
 }
 
 function toggleTTS() {
@@ -2093,11 +2593,11 @@ function toggleTTS() {
 
 function ttsToggle() {
   if (state.tts.speaking && !state.tts.paused) {
-    if (ttsAudio) ttsAudio.pause();
+    speechSynthesis.pause();
     state.tts.paused = true;
     updateTTSStatus();
   } else if (state.tts.paused) {
-    if (ttsAudio) ttsAudio.play().catch(() => {});
+    speechSynthesis.resume();
     state.tts.paused = false;
     updateTTSStatus();
   } else {
@@ -2109,25 +2609,17 @@ function ttsToggle() {
 function ttsStart() {
   const tab = getActiveTab();
   if (!tab) { showToast('⚠️ Mở file trước'); return; }
-  if (!state.settings.geminiKey) {
-    showToast('⚠️ Chưa nhập API key Gemini (vào ⚙️ Cài đặt)');
-    toggleSettings();
-    return;
-  }
-  ttsStopAudio();
-  // Read the rendered preview/article text
+  speechSynthesis.cancel();
+  // Split text into sentences from rendered preview/article
   const root = state.editMode
     ? document.getElementById('preview-body')
     : document.getElementById('md-body');
   const text = (root?.innerText || tab.content).trim();
   if (!text) { showToast('⚠️ Không có nội dung'); return; }
 
-  // state.tts.sentences holds batched CHUNKS (each = 1 API request)
-  state.tts.sentences = buildTTSChunks(text);
+  // Split into sentences
+  state.tts.sentences = splitIntoSentences(text);
   state.tts.currentIdx = 0;
-  state.tts.speaking = true;
-  state.tts.paused = false;
-  updateTTSIcon();
   speakNext();
 }
 
@@ -2136,154 +2628,7 @@ function splitIntoSentences(text) {
   return parts.map(s => s.trim()).filter(s => s.length > 0);
 }
 
-// Group sentences into chunks up to ~maxLen chars (respecting sentence
-// boundaries) so one request covers many sentences — far fewer API calls.
-function buildTTSChunks(text, maxLen = 1800) {
-  const sentences = splitIntoSentences(text);
-  const chunks = [];
-  let cur = '';
-  for (const s of sentences) {
-    if (!cur) cur = s;
-    else if ((cur.length + 1 + s.length) <= maxLen) cur += ' ' + s;
-    else { chunks.push(cur); cur = s; }
-  }
-  if (cur) chunks.push(cur);
-  return chunks.length ? chunks : [text];
-}
-
-// Call the Gemini TTS REST API, returning raw PCM bytes + sample rate.
-async function ttsSynthesizePCM(text) {
-  const s = state.settings;
-  if (!s.geminiKey) throw new Error('Chưa nhập API key');
-  const model = s.geminiModel || 'gemini-2.5-flash-preview-tts';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-  const body = {
-    contents: [{ parts: [{ text }] }],
-    generationConfig: {
-      responseModalities: ['AUDIO'],
-      speechConfig: {
-        voiceConfig: { prebuiltVoiceConfig: { voiceName: s.geminiVoice || 'Kore' } }
-      }
-    }
-  };
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': s.geminiKey },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
-    try {
-      const err = await res.json();
-      if (err?.error?.message) msg += ` — ${err.error.message}`;
-    } catch (e) {}
-    throw new Error(msg);
-  }
-  const data = await res.json();
-  const part = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-  if (!part) throw new Error('API không trả về audio');
-  return { pcm: base64ToUint8(part.inlineData.data), rate: parseSampleRate(part.inlineData.mimeType) };
-}
-
-// Synthesize one chunk into a playable WAV Blob (used for playback).
-async function ttsSynthesize(text) {
-  const { pcm, rate } = await ttsSynthesizePCM(text);
-  return pcmToWavBlob(pcm, rate);
-}
-
-function concatUint8(arrays) {
-  let total = 0;
-  for (const a of arrays) total += a.length;
-  const out = new Uint8Array(total);
-  let off = 0;
-  for (const a of arrays) { out.set(a, off); off += a.length; }
-  return out;
-}
-
-// Synthesize the whole document and download it as a single WAV file.
-let ttsDownloading = false;
-async function ttsDownload() {
-  const tab = getActiveTab();
-  if (!tab) { showToast('⚠️ Mở file trước'); return; }
-  if (!state.settings.geminiKey) {
-    showToast('⚠️ Chưa nhập API key Gemini (vào ⚙️ Cài đặt)');
-    toggleSettings();
-    return;
-  }
-  if (ttsDownloading) return;
-  const root = state.editMode
-    ? document.getElementById('preview-body')
-    : document.getElementById('md-body');
-  const text = (root?.innerText || tab.content).trim();
-  if (!text) { showToast('⚠️ Không có nội dung'); return; }
-
-  const chunks = buildTTSChunks(text);
-  ttsDownloading = true;
-  const btn = document.getElementById('tts-download');
-  if (btn) btn.disabled = true;
-  const status = document.getElementById('tts-status');
-  try {
-    const pcms = [];
-    let rate = 24000;
-    for (let i = 0; i < chunks.length; i++) {
-      status.textContent = `⬇ Tạo WAV ${i + 1}/${chunks.length}`;
-      const r = await ttsSynthesizePCM(chunks[i]);
-      pcms.push(r.pcm);
-      rate = r.rate;
-    }
-    const blob = pcmToWavBlob(concatUint8(pcms), rate);
-    download(blob, getActiveName() + '.wav');
-    showToast('✅ Đã tải file WAV');
-  } catch (err) {
-    status.textContent = '❌ Lỗi API';
-    showToast('❌ Tạo WAV lỗi: ' + err.message);
-  } finally {
-    ttsDownloading = false;
-    if (btn) btn.disabled = false;
-    updateTTSStatus();
-  }
-}
-
-function base64ToUint8(b64) {
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
-}
-
-function parseSampleRate(mime) {
-  const m = /rate=(\d+)/.exec(mime || '');
-  return m ? parseInt(m[1], 10) : 24000;
-}
-
-// Wrap raw 16-bit mono PCM in a minimal WAV container so <audio> can play it.
-function pcmToWavBlob(pcm, sampleRate) {
-  const numChannels = 1, bitsPerSample = 16;
-  const blockAlign = numChannels * bitsPerSample / 8;
-  const byteRate = sampleRate * blockAlign;
-  const dataSize = pcm.length;
-  const buf = new ArrayBuffer(44 + dataSize);
-  const view = new DataView(buf);
-  const writeStr = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
-  writeStr(0, 'RIFF');
-  view.setUint32(4, 36 + dataSize, true);
-  writeStr(8, 'WAVE');
-  writeStr(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);            // PCM
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitsPerSample, true);
-  writeStr(36, 'data');
-  view.setUint32(40, dataSize, true);
-  new Uint8Array(buf, 44).set(pcm);
-  return new Blob([buf], { type: 'audio/wav' });
-}
-
-async function speakNext() {
-  if (!state.tts.speaking) return;
+function speakNext() {
   if (state.tts.currentIdx >= state.tts.sentences.length) {
     state.tts.speaking = false;
     state.tts.paused = false;
@@ -2292,56 +2637,33 @@ async function speakNext() {
     showToast('✅ Đã đọc xong');
     return;
   }
-  const idx = state.tts.currentIdx;
-  document.getElementById('tts-status').textContent =
-    `⏳ Đang tải ${idx + 1}/${state.tts.sentences.length}`;
-
-  let blob;
-  try {
-    blob = await ttsSynthesize(state.tts.sentences[idx]);
-  } catch (err) {
-    state.tts.speaking = false;
-    state.tts.paused = false;
-    updateTTSIcon();
-    document.getElementById('tts-status').textContent = '❌ Lỗi API';
-    showToast('❌ TTS lỗi: ' + err.message);
-    return;
+  const sentence = state.tts.sentences[state.tts.currentIdx];
+  const u = new SpeechSynthesisUtterance(sentence);
+  u.rate = state.tts.rate;
+  if (state.tts.voice) {
+    u.voice = state.tts.voice;
+    u.lang = state.tts.voice.lang;
+  } else {
+    u.lang = 'vi-VN';
   }
-  // Aborted (stopped) while the request was in flight
-  if (!state.tts.speaking || state.tts.currentIdx !== idx) return;
-
-  ttsStopAudio();
-  ttsObjectUrl = URL.createObjectURL(blob);
-  ttsAudio = new Audio(ttsObjectUrl);
-  ttsAudio.playbackRate = state.tts.rate;
-  ttsAudio.onended = () => { state.tts.currentIdx++; speakNext(); };
-  ttsAudio.onerror = () => { state.tts.currentIdx++; speakNext(); };
-  updateTTSStatus();
-  updateTTSIcon();
-  try {
-    await ttsAudio.play();
-  } catch (e) {
-    // Autoplay block or playback failure — skip to next
+  u.onend = () => {
     state.tts.currentIdx++;
     speakNext();
-  }
-}
-
-function ttsStopAudio() {
-  if (ttsAudio) {
-    ttsAudio.onended = null;
-    ttsAudio.onerror = null;
-    ttsAudio.pause();
-    ttsAudio = null;
-  }
-  if (ttsObjectUrl) {
-    URL.revokeObjectURL(ttsObjectUrl);
-    ttsObjectUrl = null;
-  }
+  };
+  u.onerror = () => {
+    state.tts.currentIdx++;
+    speakNext();
+  };
+  state.tts.utterance = u;
+  state.tts.speaking = true;
+  state.tts.paused = false;
+  speechSynthesis.speak(u);
+  updateTTSStatus();
+  updateTTSIcon();
 }
 
 function ttsStop() {
-  ttsStopAudio();
+  speechSynthesis.cancel();
   state.tts.speaking = false;
   state.tts.paused = false;
   state.tts.currentIdx = 0;
@@ -2352,7 +2674,11 @@ function ttsStop() {
 function ttsRateChange(v) {
   state.tts.rate = parseFloat(v);
   document.getElementById('tts-rate-val').textContent = state.tts.rate.toFixed(1) + 'x';
-  if (ttsAudio) ttsAudio.playbackRate = state.tts.rate;
+  // Apply on next sentence
+  if (state.tts.speaking) {
+    speechSynthesis.cancel();
+    speakNext();
+  }
 }
 
 function updateTTSStatus() {
@@ -2371,60 +2697,6 @@ function updateTTSIcon() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-//                   TRANSLATE (Google Translate)
-// ════════════════════════════════════════════════════════════════════
-
-function getSelectedText() {
-  const active = document.activeElement;
-  if (active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT')) {
-    const selected = active.value.slice(active.selectionStart || 0, active.selectionEnd || 0).trim();
-    if (selected) return selected;
-  }
-  const selected = window.getSelection ? window.getSelection().toString().trim() : '';
-  return selected;
-}
-
-function getReadableText() {
-  const tab = getActiveTab();
-  if (!tab) return '';
-  const root = state.editMode
-    ? document.getElementById('preview-body')
-    : document.getElementById('md-body');
-  return (root?.innerText || tab.content || '').trim();
-}
-
-function translateCurrent() {
-  const tab = getActiveTab();
-  if (!tab) {
-    showToast('⚠️ Mở file trước');
-    return;
-  }
-
-  const selected = getSelectedText();
-  let text = selected || getReadableText();
-  if (!text) {
-    showToast('⚠️ Không có nội dung để dịch');
-    return;
-  }
-
-  const maxChars = 4800;
-  if (text.length > maxChars) {
-    text = text.slice(0, maxChars);
-    showToast('🌐 Nội dung dài, chỉ gửi phần đầu sang Google Dịch');
-  } else {
-    showToast(selected ? '🌐 Đang dịch đoạn đã chọn...' : '🌐 Đang mở Google Dịch...');
-  }
-
-  const target = state.settings.translateTarget || 'vi';
-  const url = 'https://translate.google.com/?sl=auto&tl='
-    + encodeURIComponent(target)
-    + '&text='
-    + encodeURIComponent(text)
-    + '&op=translate';
-  window.open(url, '_blank', 'noopener,noreferrer');
-}
-
-// ════════════════════════════════════════════════════════════════════
 //                   EXPORT (TXT / DOCX / PDF)
 // ════════════════════════════════════════════════════════════════════
 
@@ -2435,6 +2707,24 @@ function getActiveContent() {
 function getActiveName() {
   const tab = getActiveTab();
   return tab ? tab.name.replace(/\.(md|markdown|txt)$/i, '') : 'document';
+}
+
+async function exportMd() {
+  const md = getActiveContent();
+  if (!md) return showToast('⚠️ Không có nội dung');
+  const fileName = getActiveName() + '.md';
+  try {
+    if (window.electronAPI && window.electronAPI.fsSaveAs) {
+      const res = await window.electronAPI.fsSaveAs({ content: md, defaultName: fileName });
+      if (!res) return; // người dùng hủy
+      showToast('📝 Đã lưu ' + res.name);
+    } else {
+      download(new Blob([md], { type: 'text/markdown;charset=utf-8' }), fileName);
+      showToast('📝 Đã xuất MD');
+    }
+  } catch (err) {
+    showToast('⚠️ Không lưu được: ' + (err.message || err));
+  }
 }
 
 function exportTxt() {
@@ -2508,38 +2798,17 @@ function buildDocx(rawMarkdown, fileName) {
   const lines = rawMarkdown.split('\n');
   let xmlBody = ''; let inCode = false; let codeLines = [];
   const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  // Tokenize inline markdown into Word runs. Escaping is applied to text
-  // content only (in `run`), so tag markup never gets re-escaped or mangled.
   const inlineFormat = s => {
-    const patterns = [
-      { re: /^\*\*\*([\s\S]+?)\*\*\*/, props: '<w:b/><w:i/>' },
-      { re: /^\*\*([\s\S]+?)\*\*/, props: '<w:b/>' },
-      { re: /^__([\s\S]+?)__/, props: '<w:b/>' },
-      { re: /^\*([\s\S]+?)\*/, props: '<w:i/>' },
-      { re: /^_([\s\S]+?)_/, props: '<w:i/>' },
-      { re: /^`([^`]+)`/, props: '<w:rFonts w:ascii="Courier New" w:hAnsi="Courier New"/><w:sz w:val="18"/><w:color w:val="C17F3A"/>' },
-      { re: /^\[([^\]]+?)\]\([^)]*?\)/, props: '<w:color w:val="C17F3A"/><w:u w:val="single"/>' }
-    ];
-    const run = (txt, props) => `<w:r>${props ? `<w:rPr>${props}</w:rPr>` : ''}<w:t xml:space="preserve">${esc(txt)}</w:t></w:r>`;
-    let out = '', plain = '', i = 0;
-    while (i < s.length) {
-      const rest = s.slice(i);
-      let hit = null;
-      for (const p of patterns) {
-        const m = p.re.exec(rest);
-        if (m) { hit = { m, props: p.props }; break; }
-      }
-      if (hit) {
-        if (plain) { out += run(plain, ''); plain = ''; }
-        out += run(hit.m[1], hit.props);
-        i += hit.m[0].length;
-      } else {
-        plain += s[i];
-        i++;
-      }
-    }
-    if (plain) out += run(plain, '');
-    return out;
+    s = esc(s);
+    s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<w:r><w:rPr><w:b/><w:i/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/\*\*(.+?)\*\*/g, '<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/__(.+?)__/g, '<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/\*(.+?)\*/g, '<w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/_(.+?)_/g, '<w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/`(.+?)`/g, '<w:r><w:rPr><w:rFonts w:ascii="Courier New" w:hAnsi="Courier New"/><w:sz w:val="18"/><w:color w:val="C17F3A"/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/\[(.+?)\]\(.+?\)/g, '<w:r><w:rPr><w:color w:val="C17F3A"/><w:u w:val="single"/></w:rPr><w:t xml:space="preserve">$1</w:t></w:r>');
+    s = s.replace(/(?<!<w:t[^>]*>)([^<]+)(?!<\/w:t>)/g, (m, p1) => p1.trim() ? `<w:r><w:t xml:space="preserve">${p1}</w:t></w:r>` : m);
+    return s;
   };
   const para = (c, st='Normal') => `<w:p><w:pPr><w:pStyle w:val="${st}"/></w:pPr>${c}</w:p>`;
   const textRun = t => `<w:r><w:t xml:space="preserve">${esc(t)}</w:t></w:r>`;
@@ -2629,12 +2898,21 @@ function download(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function saveCurrentFile() {
+async function saveCurrentFile() {
   const tab = getActiveTab();
   if (!tab) return;
-  const blob = new Blob([tab.content], { type: 'text/markdown;charset=utf-8' });
-  const name = tab.name.endsWith('.md') ? tab.name : tab.name + '.md';
-  download(blob, name);
+  let name = tab.name.endsWith('.md') ? tab.name : tab.name.replace(/\.[^.\\/]+$/, '') + '.md';
+  if (window.electronAPI && window.electronAPI.fsSaveAs) {
+    try {
+      const res = await window.electronAPI.fsSaveAs({ content: tab.content, defaultName: name });
+      if (!res) return; // người dùng hủy
+      name = res.name;
+    } catch (err) {
+      return showToast('⚠️ Không lưu được: ' + (err.message || err));
+    }
+  } else {
+    download(new Blob([tab.content], { type: 'text/markdown;charset=utf-8' }), name);
+  }
   tab.edited = false;
   renderTabsBar();
   addRecent(name, tab.content);
@@ -2658,15 +2936,22 @@ function showToast(msg) {
 //                   KEYBOARD SHORTCUTS
 // ════════════════════════════════════════════════════════════════════
 
+buildEmojiPicker();
+initTranslatePanel();
+
 document.addEventListener('keydown', e => {
   const ctrl = e.ctrlKey || e.metaKey;
-  if (ctrl && e.key === 'f') { e.preventDefault(); toggleSearch(); }
+  if (ctrl && e.shiftKey && e.key.toLowerCase() === 't') { e.preventDefault(); toggleTranslate(); }
+  else if (ctrl && !e.shiftKey && e.key.toLowerCase() === 'b' && state.editMode && document.activeElement === getEditor()) { e.preventDefault(); wrapSelection('**', '**', 'chữ đậm'); }
+  else if (ctrl && !e.shiftKey && e.key.toLowerCase() === 'i' && state.editMode && document.activeElement === getEditor()) { e.preventDefault(); wrapSelection('*', '*', 'chữ nghiêng'); }
+  else if (ctrl && e.key === 'f') { e.preventDefault(); toggleSearch(); }
   else if (ctrl && e.key === 'o') { e.preventDefault(); document.getElementById('file-input').click(); }
   else if (ctrl && e.key === 'n') { e.preventDefault(); newEmptyTab(); }
   else if (ctrl && e.key === 'w') { e.preventDefault(); if (state.activeTabId) closeTab(state.activeTabId); }
   else if (ctrl && e.key === 'e') { e.preventDefault(); toggleEditMode(); }
   else if (ctrl && e.key === 's') { e.preventDefault(); saveCurrentFile(); }
-  else if (ctrl && e.shiftKey && e.key.toLowerCase() === 't') { e.preventDefault(); translateCurrent(); }
+  else if (ctrl && (e.key === '+' || e.key === '=')) { e.preventDefault(); adjustFontSize(1); }
+  else if (ctrl && (e.key === '-' || e.key === '_')) { e.preventDefault(); adjustFontSize(-1); }
   else if (ctrl && e.key === 'Tab') {
     e.preventDefault();
     if (state.tabs.length < 2) return;
@@ -2677,6 +2962,7 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'Escape') {
     if (document.getElementById('search-bar').classList.contains('visible')) toggleSearch();
     else if (document.getElementById('settings-panel').classList.contains('visible')) toggleSettings();
+    else if (document.getElementById('translate-panel').classList.contains('visible')) toggleTranslate();
   }
 });
 
@@ -2685,33 +2971,9 @@ document.addEventListener('keydown', e => {
 // ════════════════════════════════════════════════════════════════════
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  // Auto-reload once when a new service worker takes control, so app updates
-  // apply without manually clearing the cache.
-  let swReloaded = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (swReloaded) return;
-    swReloaded = true;
-    window.location.reload();
-  });
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
-      .then(reg => {
-        console.log('✅ SW registered:', reg.scope);
-        // Check for updates on every load and on an interval
-        reg.update();
-        setInterval(() => reg.update(), 60 * 60 * 1000);
-        // When a new worker is installed while one already controls the page,
-        // tell it to activate immediately (it then triggers controllerchange).
-        reg.addEventListener('updatefound', () => {
-          const nw = reg.installing;
-          if (!nw) return;
-          nw.addEventListener('statechange', () => {
-            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              nw.postMessage('SKIP_WAITING');
-            }
-          });
-        });
-      })
+      .then(reg => console.log('✅ SW registered:', reg.scope))
       .catch(err => console.warn('SW failed:', err));
   });
 }
@@ -2773,35 +3035,22 @@ graph LR
 sequenceDiagram
     participant U as Người dùng
     participant A as App
-    participant TTS as Gemini TTS API
+    participant TTS as TTS Engine
     U->>A: Click 🔊 Đọc to
-    A->>TTS: generateContent (AUDIO)
-    TTS-->>A: Trả về PCM (base64)
-    A-->>U: 🎵 Bọc WAV & phát
+    A->>TTS: Lấy giọng tiếng Việt
+    TTS-->>A: Trả về voice
+    A->>TTS: speak(text)
+    TTS-->>U: 🎵 Phát âm thanh
 \`\`\`
 
 ## 💻 Code mẫu
 
 \`\`\`javascript
-// Google Gemini TTS (REST) - tổng hợp giọng đọc
-const res = await fetch(
-  'https://generativelanguage.googleapis.com/v1beta/models/' +
-  'gemini-2.5-flash-preview-tts:generateContent',
-  {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: 'Xin chào!' }] }],
-      generationConfig: {
-        responseModalities: ['AUDIO'],
-        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } }
-      }
-    })
-  }
-);
-const data = await res.json();
-const pcm = data.candidates[0].content.parts[0].inlineData.data; // base64 PCM
-// → giải mã base64, bọc header WAV rồi phát qua <audio>
+// Web Speech API - đọc tiếng Việt
+const utterance = new SpeechSynthesisUtterance("Xin chào!");
+utterance.lang = 'vi-VN';
+utterance.rate = 1.0;
+speechSynthesis.speak(utterance);
 \`\`\`
 
 \`\`\`python
@@ -2830,7 +3079,7 @@ print([fib(i) for i in range(10)])
 ## 💡 Mẹo sử dụng
 
 > **Bật TTS để nghe đọc bài này!**
-> Vào ⚙️ Cài đặt → mục 🔊 Giọng đọc Gemini để nhập API key + chọn giọng, rồi nhấp 🔊 ở thanh công cụ và bấm Play.
+> Nhấp 🔊 ở thanh công cụ trên cùng, chọn giọng tiếng Việt, bấm Play.
 
 > Vào ⚙️ **Cài đặt** để đổi font, kích cỡ chữ, chủ đề Sepia – rất hợp đọc lâu.
 

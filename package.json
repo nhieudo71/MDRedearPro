@@ -1,0 +1,99 @@
+{
+  "name": "md-reader-pro",
+  "version": "1.0.0",
+  "description": "Trình đọc Markdown đẹp với giao diện như Claude — đầy đủ tính năng productivity.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "jszip": "^3.10.2",
+    "mammoth": "^1.13.0",
+    "pdfjs-dist": "^6.4.299",
+    "tesseract.js": "^7.0.0",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2",
+    "word-extractor": "^1.0.4",
+    "xlsx": "^0.18.5"
+  },
+  "build": {
+    "productName": "MD Reader Pro",
+    "appId": "com.mdreader.pro",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "fileAssociations": [
+        {
+          "ext": "md",
+          "name": "Markdown Document",
+          "description": "Markdown file",
+          "role": "Viewer",
+          "mimeType": "text/markdown"
+        },
+        {
+          "ext": "markdown",
+          "name": "Markdown Document",
+          "description": "Markdown file",
+          "role": "Viewer",
+          "mimeType": "text/markdown"
+        },
+        {
+          "ext": "txt",
+          "name": "Text Document",
+          "description": "Plain text file",
+          "role": "Viewer",
+          "mimeType": "text/plain"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MD Reader Pro"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/*/CHANGELOG.md",
+      "!node_modules/*/README.md",
+      "!node_modules/*/package-lock.json"
+    ],
+    "asarUnpack": [
+      "tts_vienieu.py",
+      "ocr_paddle.py",
+      "tessdata/**",
+      "node_modules/tesseract.js/**",
+      "node_modules/tesseract.js-core/**"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    }
+  }
+}

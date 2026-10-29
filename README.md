@@ -11,7 +11,8 @@ Trình đọc Markdown đẹp với giao diện như Claude — đầy đủ tí
 | **Markdown nâng cao** | Mermaid diagrams · KaTeX công thức toán · Code highlight · Collapsible code blocks |
 | **Cá nhân hóa** | 6 fonts · Cỡ chữ · Khoảng cách dòng · Độ rộng cột |
 | **Dịch thuật** | Dịch đoạn chọn hoặc tài liệu hiện tại bằng Google Translate miễn phí |
-| **Đọc to** | TTS qua API Google Gemini · 30 giọng · Tốc độ điều chỉnh |
+| **Đọc to** | TTS đa nguồn: Web Speech (giọng hệ thống) · VieNeu-TTS (tiếng Việt, offline, chỉ bản .exe) · Tốc độ điều chỉnh |
+| **Nhập file** | DOCX · DOC · XLSX · XLS · PPTX · PDF · HTML · ảnh (OCR) → Markdown (chỉ bản .exe) |
 | **Xuất file** | TXT · DOCX · PDF |
 | **PWA** | Cài như app · Hoạt động offline · Icon riêng |
 
@@ -97,11 +98,37 @@ Display: $$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$
 
 > ℹ️ Tính năng này không dùng API key và không tốn chi phí. Vì Google Translate nhận nội dung qua URL, tài liệu quá dài sẽ chỉ gửi phần đầu để tránh vượt giới hạn URL của trình duyệt.
 
-**TTS (Gemini):** Vào ⚙️ Cài đặt → mục **🔊 Giọng đọc Gemini** → nhập **API key** (lấy tại [aistudio.google.com/apikey](https://aistudio.google.com/apikey)), chọn **Model** + **Giọng đọc**. Sau đó click 🔊 trên thanh công cụ → bấm Play.
+**TTS:** Bấm 🔊 trên thanh công cụ, chọn nguồn (Web Speech hoặc VieNeu TTS), chọn giọng và bấm Play.
 
-> ℹ️ **Cách hoạt động:** App gọi thẳng API `gemini-2.5-flash-preview-tts` qua internet (endpoint Google có CORS nên **không cần server/proxy**). Gemini trả về audio **PCM thô (base64)**, app tự bọc header WAV rồi phát. Ngôn ngữ được **tự nhận diện** (gồm tiếng Việt).
+> ℹ️ **Web Speech** dùng giọng có sẵn của hệ điều hành, không cần cài thêm.
 >
-> ⚠️ API key lưu trong `localStorage` của trình duyệt; **đừng deploy công khai** bản có nhúng key.
+> ℹ️ **VieNeu TTS** chỉ có trong bản .exe, chạy offline qua Python. Cần cài trước: `py -3.14 -m venv %LOCALAPPDATA%\MDReaderPro\venv` rồi `%LOCALAPPDATA%\MDReaderPro\venv\Scripts\pip install vieneu`. Lần đầu dùng cần mạng để tải model (~900 MB). Có thể chỉ định Python khác bằng biến môi trường `MDR_PYTHON`.
+>
+> ℹ️ **Chạy VieNeu trên GPU NVIDIA (tùy chọn):** bản exe dùng chung venv ở trên, nên chỉ cần cài thêm vào venv đó (cần build lại exe một lần để nhận `tts_vienieu.py` mới):
+> ```
+> %LOCALAPPDATA%\MDReaderPro\venv\Scripts\pip install torch==2.9.1 torchaudio==2.9.1 --index-url https://download.pytorch.org/whl/cu128
+> %LOCALAPPDATA%\MDReaderPro\venv\Scripts\pip install transformers safetensors
+> ```
+> Dung lượng tải khoảng 3 GB. Biến môi trường `MDR_VIENEU_DEVICE` chọn thiết bị: `auto` (mặc định, dùng GPU nếu có PyTorch CUDA), `cuda` hoặc `cpu`. Nếu nạp GPU lỗi (thiếu VRAM, thiếu thư viện), app tự chuyển sang CPU. Thiết bị đang dùng được ghi ở stderr dòng `VIENEU_BACKEND:`.
+
+**OCR (PDF scan và ảnh):** engine chính là Tesseract (tesseract.js, model `vie` đi kèm trong `tessdata/`), không cần cài thêm và đọc đúng dấu tiếng Việt. PaddleOCR chỉ là dự phòng nếu Tesseract lỗi; phần dưới nói về PaddleOCR. Cài PaddleOCR một lần (tùy chọn):
+```
+py -3.12 -m venv %LOCALAPPDATA%\MDReaderPro\ocr-venv
+%LOCALAPPDATA%\MDReaderPro\ocr-venv\Scripts\pip install paddlepaddle paddleocr pypdfium2
+```
+Trang PDF có ít hơn 20 ký tự chữ được OCR tự động; ảnh (png, jpg, bmp, webp, tiff) cũng nhập được qua nút "Nhập file" hoặc kéo thả. Lần đầu chạy cần mạng để tải model. Biến môi trường: `MDR_OCR_PYTHON` (đổi Python), `MDR_OCR_LANG` (mặc định `vi`), `MDR_OCR_VERSION` (`PP-OCRv3`, `PP-OCRv5`, `PP-OCRv6`). Chạy trên CPU, khoảng 10–25 giây mỗi lần khởi động.
+
+**PPTX:** nhập `.pptx` (bản .exe) sẽ tạo mỗi slide một mục `## Slide N: tiêu đề`, đoạn đầu là tiêu đề, các đoạn sau là gạch đầu dòng. Có xử lý bảng, ghi chú slide và chữ trong nhóm hình (chỉ thử với file tự tạo, chưa thử với file PowerPoint thật). `.doc` và `.xls` cũ cũng nhập được, xem giới hạn bên dưới.
+
+> ⚠️ **Giới hạn:** PaddleOCR (bản dự phòng) bỏ một số chữ có dấu nặng/hỏi (ví dụ "bạn" thành "bn"); Tesseract không bị lỗi này trên ảnh thử. Chỉ thử với ảnh và PDF scan tự tạo, nên vẫn cần đọc lại kết quả với tài liệu thật.
+>
+> `.doc` cũ chỉ lấy chữ (word-extractor), `.xls` cũ đọc bằng SheetJS với cùng giới hạn dòng như `.xlsx`.
+
+**Tải âm thanh (WAV):** khi dùng VieNeu TTS trong bản .exe, nút ⬇ trên thanh TTS đọc toàn bộ tab đang mở, ghép các câu (cách nhau 0,2 giây) thành một file WAV mono 16-bit 48 kHz và lưu qua hộp thoại Save As. Thời gian tạo file bằng thời gian VieNeu đọc từng câu, tiến độ hiện dạng `⏳ i/n`. File được lấy mẫu lại về 48 kHz, nên không tốt hơn chất lượng gốc của model. Chưa thử với văn bản dài trên GPU 4 GB.
+
+**Bản portable:** `npm run dist` tạo hai file trong `release/`: bản cài `MD Reader Pro Setup 1.0.0.exe` và bản portable `MD Reader Pro 1.0.0.exe` (chạy trực tiếp, không cần cài). Cả hai chưa ký số nên Windows SmartScreen có thể cảnh báo. Python, `vieneu` và PaddleOCR không nằm trong gói, cần cài riêng như hướng dẫn ở trên.
+
+**Công thức toán:** `$...$` và `$$...$$` được cất ra khỏi trình phân tích Markdown trước khi render để `marked` không làm mất dấu `\` hay đổi `_`, `^` thành in nghiêng. Bỏ qua code block và inline code. Ví dụ `$5 đến $10` không bị coi là công thức.
 
 **Lưu trữ:** Cài đặt và lịch sử file lưu trong `localStorage` của trình duyệt — không gửi lên server.
 
@@ -113,7 +140,8 @@ Display: $$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$
 - [Mermaid](https://mermaid.js.org/) — Diagram rendering
 - [KaTeX](https://katex.org/) — Math typesetting
 - [JSZip](https://stuk.github.io/jszip/) — DOCX export
-- [Google Gemini TTS](https://ai.google.dev/gemini-api/docs/speech-generation) (REST `generateContent`) — TTS
+- Web Speech API + [VieNeu-TTS](https://github.com/pnnbao97/VieNeu-TTS) — TTS
+- Electron, mammoth, exceljs, pdfjs-dist, turndown — bản .exe và nhập file
 
 ---
 

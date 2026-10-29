@@ -2,7 +2,7 @@
 //                   MD READER PRO - SERVICE WORKER
 // ════════════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'md-reader-pro-v7';
+const CACHE_VERSION = 'md-reader-pro-v8';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
